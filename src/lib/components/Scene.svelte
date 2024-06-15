@@ -2,6 +2,7 @@
 	import { T, useRender, useThrelte } from '@threlte/core';
 	import { OrbitControls, Sky, Stars, Grid } from '@threlte/extras';
 	import Spaceship from './models/spaceship.svelte';
+	import { AutoColliders, Collider, RigidBody } from '@threlte/rapier';
 	import {
 		Color,
 		Mesh,
@@ -11,7 +12,12 @@
 		Raycaster,
 		Vector2,
 		Vector3,
-		DoubleSide
+		DoubleSide,
+		BoxGeometry,
+		Box3,
+		//Box3Helper,
+		BoxHelper,
+		ObjectSpaceNormalMap
 	} from 'three';
 	import { onMount } from 'svelte';
 	import StarsAndStripes from './StarsAndStripes.svelte';
@@ -20,9 +26,11 @@
 	import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 	import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 	import PurpleSky from './PurpleSky.svelte';
+	import { Box3Helper } from 'three';
 
 	const { scene, camera, renderer } = useThrelte();
 	let spaceShipRef;
+	let playerBodyRef;
 	let starsAndStripesRef;
 	let intersectionPoint;
 	let translZ = 0;
@@ -31,12 +39,20 @@
 	let translAccelleration = 0;
 	let angleZ = 0;
 	let angleX = 0;
+	let prevTargetZ = 0;
+	let distanceFromMouseBaseZ = 0;
 	let angleY = 0;
 	let angleAccelleration = 0;
 	let pmrem = new PMREMGenerator(renderer);
 	let envMapRT;
 
 	let planeRef;
+
+	// const playerBoundingBox = new Box3().setFromObject(playerBodyRef.current);
+	// console.log(playerBodyRef, playerBoundingBox);
+
+	const spaceShipColliderBox = new Box3();
+	let ballBoxes = [];
 
 	const composer = new EffectComposer(renderer);
 	composer.setSize(innerWidth, innerHeight);
@@ -69,16 +85,25 @@
 			// angleZ += angleAccelleration;
 
 			const targetZ = intersectionPoint?.z || 0;
+
+			distanceFromMouseBaseZ = Math.abs(prevTargetZ - targetZ);
+
+			prevTargetZ = targetZ;
 			translAccelleration += (targetZ - translZ) * 0.002; // stiffness
 			translAccelleration *= 0.95; // damping
 			translZ += translAccelleration;
 
+			const magic = distanceFromMouseBaseZ * 40;
+
 			const dir = intersectionPoint.clone().sub(new Vector3(0, translZ, 0)).normalize();
-			const dirCos = dir.dot(new Vector3(0, 0, 1));
+			const dirCos = dir.dot(new Vector3(0, 0, Math.min(magic, 1)));
 			const angle = Math.acos(dirCos) - Math.PI * 0.5;
 			angleAccelleration += (angle - angleY) * 0.01; // stiffness
 			angleAccelleration *= 0.85; // damping
+			//console.log(distanceFromMouseBaseZ,magic);
+			//angleAccelleration *= (1-distanceFromMouseBaseZ);
 			angleY += angleAccelleration;
+			//angleY*=(distanceFromMouseBaseZ*3);
 		}
 
 		if (envMapRT) envMapRT.dispose();
@@ -96,18 +121,44 @@
 				child.material.normalScale.set(0.3, 0.3);
 			}
 		});
+
 		// billboarding
 		//planeRef.lookAt(camera.current.position);
-
+		//angleAccelleration *= 0.2;
+		updateBoundingBoxes();
+		checkIntersection();
 		composer.render();
 	});
+	// Function to update the bounding boxes
+	function updateBoundingBoxes() {
+		spaceShipColliderBox.setFromObject(playerBodyRef);
+	}
+
+	// Function to check for intersection
+	function checkIntersection() {
+		ballBoxes.forEach((ballBox) => {
+			if (
+				spaceShipColliderBox.intersectsSphere({ center: ballBox.pos, radius: ballBox.scale })
+			) {
+				console.log('Player is overlapping the target mesh!');
+			} else {
+				// console.log('Player is not overlapping the target mesh.');
+			}
+		});
+	}
+
+	function getCollidingObjects(objects) {
+		// console.log(objects);
+		// ballBoxes = objects.map((object) => {
+		// 	return new Box3().setFromCenterAndSize(object.pos, object.scale);
+		// });
+		ballBoxes = objects;
+	}
 
 	onMount(() => {
 		setupEffectComposer();
 
 		const planeGeo = new PlaneGeometry(40, 40);
-		//const planeMat = new MeshBasicMaterial();
-		//planeMat.color=0xff0000;
 		const planeMat = new MeshBasicMaterial({
 			color: 0xff0000,
 			side: DoubleSide, // Double-sided
@@ -142,10 +193,27 @@
 			if (e.code === 'Space') {
 				console.log('Space key was pressed');
 				// starsAndStripesRef.visible = !starsAndStripesRef.visible;
-				console.log(camera.current.position);
+				// const group = playerBodyRef.parent.parent.parent;
+				// const rigidBody = playerBodyRef.parent.parent;
+				// const collider = playerBodyRef.parent;
+				// const mesh = playerBodyRef;
+				// window.rr={
+				// 	group,
+				// 	rigidBody,
+				// 	collider,
+				// 	mesh
+				// }
+
+				//const playerBoundingBox = new Box3().setFromObject(spaceShipRef.current);
+				//console.log(playerBoundingBox);
+				//console.log(playerBodyRef);
+				
+
+				//
 			}
 		}
 
+		// playerBodyRef.visible = false;
 		window.addEventListener('keydown', onKeyPressed);
 		window.addEventListener('pointermove', onPointerMove);
 		return () => {
@@ -167,14 +235,35 @@
 	<T.MeshBasicMaterial side={DoubleSide} color={[1, 0, 1]} transparent opacity={0.25} />
 </T.Mesh> -->
 <!-- rotation={[angleZ, 0, angleZ, 'ZXY']} -->
+
 <Spaceship
 	bind:ref={spaceShipRef}
 	position={[0, 0, translZ]}
 	rotation={[-angleY, angleY * 0.1, 0, 'ZXY']}
 />
 
-<StarsAndStripes bind:ref={starsAndStripesRef} />
+<T.Mesh
+	bind:ref={playerBodyRef}
+	geometry={new BoxGeometry(2, 1, 1)}
+	position={[0, 0, translZ]}
+	material={new MeshBasicMaterial()}
+/>
+
+<!-- <T.Group position={[0, 0, translZ]}>
+	<RigidBody type={'kinematic'} gravityScale={0}>
+		<Collider shape={'cuboid'} sensor={true} args={[0.125, 0.125, 0.125]}>
+			<T.Mesh
+				geometry={new BoxGeometry(1, 1, 1)}
+				position={[0, 0, 0]}
+				material={new MeshBasicMaterial()}
+				bind:ref={playerBodyRef}
+			/>
+		</Collider>
+	</RigidBody>
+</T.Group> -->
+
+<StarsAndStripes bind:ref={starsAndStripesRef} {getCollidingObjects} />
 <!-- https://threlte.xyz/docs/reference/extras/stars -->
 <!-- <Stars lightness={0.1} factor={6}  radius={50}/> -->
 <!-- <PurpleSky/> -->
-<Grid sectionThickness={0} infiniteGrid cellColor="#dddddd" cellSize={2} />
+<Grid sectionThickness={1} infiniteGrid cellColor="#dddddd" cellSize={2} />

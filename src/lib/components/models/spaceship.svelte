@@ -8,12 +8,24 @@ Title: Rusty Spaceship - Orange
 -->
 
 <script>
-	import { AddEquation, CustomBlending, Group, LessEqualDepth, OneFactor } from 'three';
-	import { T, forwardEventHandlers } from '@threlte/core';
+	import {
+		AddEquation,
+		BoxGeometry,
+		CustomBlending,
+		CylinderGeometry,
+		Group,
+		LessEqualDepth,
+		MeshBasicMaterial,
+		OneFactor
+	} from 'three';
+	import { T, forwardEventHandlers, useFrame } from '@threlte/core';
 	import { useGltf } from '@threlte/extras';
 	import { useTexture } from '@threlte/extras';
+	import { AutoColliders, RigidBody } from '@threlte/rapier';
 
 	export const ref = new Group();
+	let afterBurnerScaleY = 1;
+	let time = 0;
 
 	const gltf = useGltf('/models/spaceship.glb');
 	const map = useTexture('textures/energy-beam-opacity.png');
@@ -28,6 +40,19 @@ Title: Rusty Spaceship - Orange
 		}
 		alphaFix(model.materials.spaceship_racer);
 		alphaFix(model.materials.cockpit);
+		console.log(map);
+	});
+
+	//<T.CylinderGeometry args={[70, 0, 1600, 15]} />
+	//const cylinderGeo = new CylinderGeometry(70, 0, 1600, 15);
+	//window.cg = cylinderGeo;
+
+	useFrame((_, delta) => {
+		time += delta;
+		//if (cylinderGeo) {
+		const scale = Math.sin(time * 10) * 0.1;
+		afterBurnerScaleY = 1 + scale;
+		//}
 	});
 
 	const component = forwardEventHandlers();
@@ -45,6 +70,7 @@ Title: Rusty Spaceship - Orange
 				material={gltf.materials.spaceship_racer}
 				position={[739.26, -64.81, 64.77]}
 			/>
+
 			<T.Mesh
 				castShadow
 				receiveShadow
@@ -130,9 +156,14 @@ Title: Rusty Spaceship - Orange
 				position={[739.37, 145.69, 315.6]}
 				rotation={[0.17, 0, 0]}
 			/>
+
 			{#await map then mapValue}
-				<T.Mesh position={[740, -60, -1350]} rotation.x={Math.PI * 0.5}>
-					<T.CylinderGeometry args={[70, 25, 1600, 15]} />
+				<T.Mesh
+					position={[740, -60, -1350 - 10]}
+					rotation.x={Math.PI * 0.5}
+					scale.y={afterBurnerScaleY}
+				>
+					<T.CylinderGeometry args={[70, 0, 1600, 15]} />
 					<T.MeshBasicMaterial
 						color={[1.0, 0.4, 0.02]}
 						alphaMap={mapValue}
