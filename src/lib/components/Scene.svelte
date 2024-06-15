@@ -1,6 +1,6 @@
 <script>
 	import { T, useRender, useThrelte } from '@threlte/core';
-	import { OrbitControls, Sky, Stars, Grid } from '@threlte/extras';
+	import { OrbitControls, Sky, Stars, Grid, AnimatedSpriteMaterial } from '@threlte/extras';
 	import Spaceship from './models/spaceship.svelte';
 	import { AutoColliders, Collider, RigidBody } from '@threlte/rapier';
 	import {
@@ -47,6 +47,8 @@
 	let envMapRT;
 
 	let planeRef;
+
+	let fire;
 
 	// const playerBoundingBox = new Box3().setFromObject(playerBodyRef.current);
 	// console.log(playerBodyRef, playerBoundingBox);
@@ -192,24 +194,9 @@
 		function onKeyPressed(e) {
 			if (e.code === 'Space') {
 				console.log('Space key was pressed');
-				// starsAndStripesRef.visible = !starsAndStripesRef.visible;
-				// const group = playerBodyRef.parent.parent.parent;
-				// const rigidBody = playerBodyRef.parent.parent;
-				// const collider = playerBodyRef.parent;
-				// const mesh = playerBodyRef;
-				// window.rr={
-				// 	group,
-				// 	rigidBody,
-				// 	collider,
-				// 	mesh
-				// }
-
 				//const playerBoundingBox = new Box3().setFromObject(spaceShipRef.current);
 				//console.log(playerBoundingBox);
 				//console.log(playerBodyRef);
-				
-
-				//
 			}
 		}
 
@@ -267,3 +254,6 @@
 <!-- <Stars lightness={0.1} factor={6}  radius={50}/> -->
 <!-- <PurpleSky/> -->
 <Grid sectionThickness={1} infiniteGrid cellColor="#dddddd" cellSize={2} />
+<T.Sprite position={[0, 1, translZ]}>
+	<AnimatedSpriteMaterial textureUrl="/textures/fire.png" totalFrames={8} fps={10} />
+</T.Sprite>
