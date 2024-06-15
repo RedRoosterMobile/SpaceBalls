@@ -25,10 +25,13 @@
 	let spaceShipRef;
 	let starsAndStripesRef;
 	let intersectionPoint;
+	let translZ = 0;
 	let translY = 0;
 	let translX = 0;
 	let translAccelleration = 0;
 	let angleZ = 0;
+	let angleX = 0;
+	let angleY = 0;
 	let angleAccelleration = 0;
 	let pmrem = new PMREMGenerator(renderer);
 	let envMapRT;
@@ -53,22 +56,29 @@
 	// https://threlte.xyz/docs/reference/core/use-render
 	useRender(({ scene }) => {
 		if (intersectionPoint) {
-			const targetY = intersectionPoint?.y || 0;
-			translAccelleration += (targetY - translY) * 0.002; // stiffness
-			translAccelleration *= 0.95; // damping
-			translY += translAccelleration;
+			// const targetY = intersectionPoint?.y || 0;
+			// translAccelleration += (targetY - translY) * 0.002; // stiffness
+			// translAccelleration *= 0.95; // damping
+			// translY += translAccelleration;
 
-			const targetX = intersectionPoint?.x || 0;
-			translAccelleration += (targetY - translX) * 0.002; // stiffness
-			translAccelleration *= 0.95; // damping
-			translX += translAccelleration;
+			// const dir = intersectionPoint.clone().sub(new Vector3(0, translY, 0)).normalize();
+			// const dirCos = dir.dot(new Vector3(0, 1, 0));
+			// const angle = Math.acos(dirCos) - Math.PI * 0.5;
+			// angleAccelleration += (angle - angleZ) * 0.01; // stiffness
+			// angleAccelleration *= 0.85; // damping
+			// angleZ += angleAccelleration;
 
-			const dir = intersectionPoint.clone().sub(new Vector3(0, translY, 0)).normalize();
-			const dirCos = dir.dot(new Vector3(0, 1, 0));
+			const targetZ = intersectionPoint?.z || 0;
+			translAccelleration += (targetZ - translZ) * 0.002; // stiffness
+			translAccelleration *= 0.95; // damping
+			translZ += translAccelleration;
+
+			const dir = intersectionPoint.clone().sub(new Vector3(0, translZ, 0)).normalize();
+			const dirCos = dir.dot(new Vector3(0, 0, 1));
 			const angle = Math.acos(dirCos) - Math.PI * 0.5;
-			angleAccelleration += (angle - angleZ) * 0.01; // stiffness
+			angleAccelleration += (angle - angleY) * 0.01; // stiffness
 			angleAccelleration *= 0.85; // damping
-			angleZ += angleAccelleration;
+			angleY += angleAccelleration;
 		}
 
 		if (envMapRT) envMapRT.dispose();
@@ -95,7 +105,7 @@
 	onMount(() => {
 		setupEffectComposer();
 
-		const planeGeo = new PlaneGeometry(20, 20);
+		const planeGeo = new PlaneGeometry(40, 40);
 		//const planeMat = new MeshBasicMaterial();
 		//planeMat.color=0xff0000;
 		const planeMat = new MeshBasicMaterial({
@@ -125,18 +135,18 @@
 			if (intersectionPoint) {
 				// this prevents the spring motion to be different while the pointer
 				// spans the x axis
-				intersectionPoint.x = 3;
+				//intersectionPoint.x = 3;
 			}
 		}
 		function onKeyPressed(e) {
 			if (e.code === 'Space') {
 				console.log('Space key was pressed');
-				starsAndStripesRef.visible=!starsAndStripesRef.visible;
+				// starsAndStripesRef.visible = !starsAndStripesRef.visible;
+				console.log(camera.current.position);
 			}
 		}
 
 		window.addEventListener('keydown', onKeyPressed);
-
 		window.addEventListener('pointermove', onPointerMove);
 		return () => {
 			window.removeEventListener('pointermove', onPointerMove);
@@ -145,7 +155,8 @@
 	});
 </script>
 
-<T.PerspectiveCamera makeDefault position={[-5, 6, 10]} fov={25}>
+<!-- original position={[-5, 6, 10]} -->
+<T.PerspectiveCamera makeDefault position={[24, 3, 0]} fov={25}>
 	<OrbitControls enableDamping target={[0, 0, 0]} />
 </T.PerspectiveCamera>
 
@@ -155,19 +166,15 @@
 	<T.PlaneGeometry args={[2, 2]} />
 	<T.MeshBasicMaterial side={DoubleSide} color={[1, 0, 1]} transparent opacity={0.25} />
 </T.Mesh> -->
+<!-- rotation={[angleZ, 0, angleZ, 'ZXY']} -->
 <Spaceship
 	bind:ref={spaceShipRef}
-	position={[0, translY, 0]}
-	rotation={[angleZ, 0, angleZ, 'ZXY']}
+	position={[0, 0, translZ]}
+	rotation={[-angleY, angleY * 0.1, 0, 'ZXY']}
 />
 
 <StarsAndStripes bind:ref={starsAndStripesRef} />
 <!-- https://threlte.xyz/docs/reference/extras/stars -->
 <!-- <Stars lightness={0.1} factor={6}  radius={50}/> -->
 <!-- <PurpleSky/> -->
-<Grid
-sectionThickness={0}
-infiniteGrid
-cellColor="#dddddd"
-cellSize={2}
-/>
+<Grid sectionThickness={0} infiniteGrid cellColor="#dddddd" cellSize={2} />

@@ -119,7 +119,7 @@
 					position={[star.pos.x, star.pos.y, star.pos.z]}
 					scale={[star.len, 1, 1]}
 					color={star.color}
-					
+					rotation.x={Math.PI / 2}
 				/>
 			{/each}
 		</InstancedMesh>

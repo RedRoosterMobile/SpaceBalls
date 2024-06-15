@@ -18,17 +18,17 @@ Title: Rusty Spaceship - Orange
 	const gltf = useGltf('/models/spaceship.glb');
 	const map = useTexture('textures/energy-beam-opacity.png');
 
-	// gltf.then((model) => {
-	// 	function alphaFix(material) {
-	// 		material.transparent = true;
-	// 		material.alphaToCoverage = true;
-	// 		material.depthFunc = LessEqualDepth;
-	// 		material.depthTest = true;
-	// 		material.depthWrite = true;
-	// 	}
-	// 	alphaFix(model.materials.spaceship_racer);
-	// 	alphaFix(model.materials.cockpit);
-	// });
+	gltf.then((model) => {
+		function alphaFix(material) {
+			material.transparent = true;
+			material.alphaToCoverage = true;
+			material.depthFunc = LessEqualDepth;
+			material.depthTest = true;
+			material.depthWrite = true;
+		}
+		alphaFix(model.materials.spaceship_racer);
+		alphaFix(model.materials.cockpit);
+	});
 
 	const component = forwardEventHandlers();
 </script>
