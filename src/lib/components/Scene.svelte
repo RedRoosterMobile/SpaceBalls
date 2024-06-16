@@ -6,6 +6,9 @@
 	import {
 		Color,
 		Mesh,
+		AudioLoader,
+		AudioListener,
+		Audio,
 		MeshBasicMaterial,
 		MeshLambertMaterial,
 		PMREMGenerator,
@@ -301,6 +304,10 @@
 				// prevent multiple triggers
 				if (lastExplosion <= 0) {
 					explosionParticles._AddParticles(currentDelta, spaceShipRef.position);
+					if (sfxExplosion.isPlaying) sfxExplosion.stop();
+					// https://threejs.org/docs/#api/en/audio/PositionalAudio use this!!
+					sfxExplosion.position.copy(spaceShipRef.position);
+					sfxExplosion.play();
 					lastExplosion = 1;
 					return;
 				}
@@ -335,6 +342,8 @@
 	const raycaster = new Raycaster();
 	function shootLaser(position) {
 		if (animateLaser) return;
+		if (sfxLaser.isPlaying) sfxLaser.stop();
+		sfxLaser.play();
 		// Update the laser's position
 
 		const laserStartPosition = new THREE.Vector3(-laser.geometry.parameters.height / 2, 0, 0);
@@ -376,6 +385,9 @@
 	function handleHit(ball) {
 		hideItem(ball.id);
 		explosionParticles._AddParticles(currentDelta, ball.pos);
+		if (sfxExplosion.isPlaying) sfxExplosion.stop();
+		sfxExplosion.position.copy(ball.pos);
+		sfxExplosion.play();
 	}
 
 	onMount(() => {
@@ -436,6 +448,7 @@
 		//console.log(params);
 		explosionParticles = new ParticleSystemSimon(params);
 		initLaser();
+		loadSounds();
 
 		return () => {
 			window.removeEventListener('pointermove', onPointerMove);
@@ -458,6 +471,31 @@
 	// };
 
 	// laser: super long, thin billboards https://youtu.be/LltugBg4dtk?si=wwXuxxDQYK3lDOa7&t=501
+	let sfxLaser;
+	let sfxExplosion;
+	function loadSounds() {
+		// create an AudioListener and add it to the camera
+		const listener = new AudioListener();
+		$camera.add(listener);
+
+		// create a global audio source
+		sfxLaser = new Audio(listener);
+
+		// load a sound and set it as the Audio object's buffer
+		const audioLoader = new AudioLoader();
+		audioLoader.load('/audio/Laser.mp3', function (buffer) {
+			sfxLaser.setBuffer(buffer);
+			sfxLaser.setLoop(false);
+			sfxLaser.setVolume(0.5);
+		});
+
+		sfxExplosion = new Audio(listener);
+		audioLoader.load('/audio/Explosion.mp3', function (buffer) {
+			sfxExplosion.setBuffer(buffer);
+			sfxExplosion.setLoop(false);
+			sfxExplosion.setVolume(0.5);
+		});
+	}
 </script>
 
 <!-- original position={[-5, 6, 10]} -->

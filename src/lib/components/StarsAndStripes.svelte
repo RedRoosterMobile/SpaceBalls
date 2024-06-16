@@ -94,10 +94,10 @@
 		//nebula.pos = new Vector3(r(-15-150, -45 - 150), r(-10.5, 1.5), r(30, -45));
 
 		// back, but random
-		//ball.pos = new Vector3(r(-15 - 150, -45 - 150), 0.5 * ball.scale, r(30, -45));
+		ball.pos = new Vector3(r(-15 - 150, -45 - 150), 0.5 * ball.scale, r(30, -45));
 
 		// all in one line
-		ball.pos = new Vector3(-45 - 150, 0.5 * ball.scale, 0);
+		// ball.pos = new Vector3(-45 - 150, 0.5 * ball.scale, 0);
 
 		ball.color = color;
 		ball.speed = r(0.5, 1.5) * BALL_SPEED_MULT;
