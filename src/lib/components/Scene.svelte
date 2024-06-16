@@ -194,7 +194,7 @@
 
 	//useRender(({ _ }, delta) => {
 
-	let ps;
+	let explosionParticles;
 	let currentDelta = 0;
 	useRender(({ _, renderer, __ }, delta) => {
 		time += delta;
@@ -259,10 +259,9 @@
 		updateBoundingBoxes();
 		checkIntersection();
 
-		//ps?.Step(delta);
-		if (ps) {
-			ps._UpdateParticles(delta);
-			ps._UpdateGeometry();
+		if (explosionParticles) {
+			explosionParticles._UpdateParticles(delta);
+			explosionParticles._UpdateGeometry();
 		}
 
 		composer.render();
@@ -282,19 +281,24 @@
 	let lastExplosion = 0;
 	// Function to check for intersection
 	function checkIntersection() {
+		let hadExplosion = false;
 		balls.forEach((ballBox) => {
 			if (spaceShipColliderBox.intersectsSphere({ center: ballBox.pos, radius: ballBox.scale })) {
 				//console.log('Player is overlapping the target mesh!');
-				fireRef.visible = true;
+				//fireRef.visible = true;
 				screenshakeOffset = 1;
 				hideItem(ballBox.id);
+				// prevent multiple triggers
 				if (lastExplosion <= 0) {
-					ps._AddParticles(currentDelta, spaceShipRef.position);
-					lastExplosion = 1;
+					explosionParticles._AddParticles(currentDelta, spaceShipRef.position);
+					hadExplosion = true;
 				}
 				play();
 			}
 		});
+		if (hadExplosion) {
+			lastExplosion = 1;
+		}
 	}
 
 	onMount(() => {
@@ -335,14 +339,14 @@
 		function onKeyPressed(e) {
 			if (e.code === 'Space') {
 				console.log('Space key was pressed', spaceShipRef.position);
-				fireRef.visible = true;
-				ps._AddParticles(currentDelta, spaceShipRef.position);
+				//fireRef.visible = true;
+				explosionParticles._AddParticles(currentDelta, spaceShipRef.position);
 				play();
 			}
 		}
 
 		playerBodyRef.visible = false;
-		fireRef.visible = false;
+		//fireRef.visible = false;
 		window.addEventListener('keydown', onKeyPressed);
 		window.addEventListener('pointermove', onPointerMove);
 
@@ -353,7 +357,7 @@
 		console.log(scene, camera.current);
 		const params = { parent: scene, camera: camera.current };
 		console.log(params);
-		ps = new ParticleSystemSimon(params);
+		explosionParticles = new ParticleSystemSimon(params);
 
 		return () => {
 			window.removeEventListener('pointermove', onPointerMove);
@@ -407,7 +411,7 @@
 <!-- <Stars lightness={0.1} factor={6} radius={50} /> -->
 <PurpleSky />
 <!-- <Grid sectionThickness={1} infiniteGrid cellColor="#dddddd" cellSize={2} /> -->
-<T.Sprite position={[0, 1, translZ]} bind:ref={fireRef}>
+<!-- <T.Sprite position={[0, 1, translZ]} bind:ref={fireRef}>
 	<AnimatedSpriteMaterial
 		bind:play
 		bind:pause
@@ -421,5 +425,5 @@
 		columns={4}
 		fps={20}
 	/>
-</T.Sprite>
+</T.Sprite> -->
 <!-- <Fire visible={false} /> -->

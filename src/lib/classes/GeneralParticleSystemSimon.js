@@ -65,11 +65,14 @@ class LinearSpline {
 	}
 }
 
-export class ParticleSystemSimon {
+export class GeneralParticleSystemSimon {
 	constructor(params) {
+		console.log(params);
 		const uniforms = {
 			diffuseTexture: {
-				value: new THREE.TextureLoader().load('/textures/fire_big.png')
+				value: new THREE.TextureLoader().load(
+					params.texture ? params.texture : '/textures/fire_big.png'
+				)
 			},
 			pointMultiplier: {
 				value: window.innerHeight / (2.0 * Math.tan((0.5 * 60.0 * Math.PI) / 180.0))
@@ -86,7 +89,6 @@ export class ParticleSystemSimon {
 			transparent: true,
 			vertexColors: true
 		});
-		console.log(params);
 
 		this._camera = params.camera;
 		this._particles = [];
@@ -123,7 +125,7 @@ export class ParticleSystemSimon {
 		this._sizeSpline.AddPoint(0.5, 5.0);
 		this._sizeSpline.AddPoint(1.0, 1.0);
 
-		document.addEventListener('keyup', (e) => this._onKeyUp(e), false);
+		//document.addEventListener('keyup', (e) => this._onKeyUp(e), false);
 
 		this._UpdateGeometry();
 	}
@@ -136,9 +138,25 @@ export class ParticleSystemSimon {
 				break;
 		}
 	}
-	_AddParticles(timeElapsed, spawnPosition) {
+
+	// TODO: make this more configurable, especially the
+	// - velocity OK
+	// - life
+	// - amount
+	// - color?
+
+	/**
+	 *
+	 * @param {number} timeElapsed aka delta
+	 * @param {THREE.Vector3} spawnPosition
+	 * @param {THREE.Vector3} velocity
+	 */
+	_AddParticles(timeElapsed, spawnPosition, velocity) {
 		if (!this.gdfsghk) {
 			this.gdfsghk = 0.0;
+		}
+		if (!this.velocity) {
+			velocity = new THREE.Vector3(0, 0, 0);
 		}
 		this.gdfsghk += timeElapsed * 30;
 		const n = Math.floor(this.gdfsghk * 75.0);
@@ -153,13 +171,14 @@ export class ParticleSystemSimon {
 					spawnPosition.z + (Math.random() * 2 - 1) * 1.0
 				),
 				size: (Math.random() * 0.5 + 0.5) * 4.0,
+				// prevent color spline thing to tint
 				colour: new THREE.Color(),
 				alpha: 1.0,
 				life: life,
 				maxLife: life,
 				rotationSpeed: Math.random() + 1,
 				rotation: Math.random() * 2.0 * Math.PI,
-				velocity: new THREE.Vector3(0, 0, 0)
+				velocity: new THREE.Vector3(0, 0, 0) + velocity
 			});
 		}
 	}
@@ -240,6 +259,7 @@ usage:
  this._particles = new ParticleSystem({
         parent: this._scene,
         camera: this._camera,
+		texture: '/textures/my_tex.png'
     });
 
 
