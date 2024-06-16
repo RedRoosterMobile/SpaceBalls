@@ -58,25 +58,25 @@
 	let time = 0;
 
 	const spaceShipColliderBox = new Box3();
-	let ballBoxes = [];
+	let balls = [];
 	// Subscribe to the store to get the initial value and updates
 	const unsubscribe = itemsStore.subscribe((value) => {
-		ballBoxes = value;
+		balls = value;
 	});
 
 	// this will kick it out of the array..
 	// how to add new ones?
 	function removeItem(id) {
-		ballBoxes = ballBoxes.filter((item) => item.id !== id);
-		itemsStore.set(ballBoxes); // Update the store
+		balls = balls.filter((item) => item.id !== id);
+		itemsStore.set(balls); // Update the store
 	}
 
 	function hideItem(id) {
-		ballBoxes = ballBoxes.map((item) => {
-			if (item.id == id) item.visible = false;
+		balls = balls.map((item) => {
+			if (item.id === id) item.visible = false;
 			return item;
 		});
-		itemsStore.set(ballBoxes); // Update the store
+		itemsStore.set(balls); // Update the store
 	}
 
 	// Clean up the subscription
@@ -171,28 +171,20 @@
 
 	let screenshakeOffset = 0;
 	function screenshake() {
-		// better https://www.youtube.com/watch?v=1i5SB8Ct1y0
-
-		//screenshakeOffsxt=Math
-		cameraTarget.y = Math.sin(time / 30) * screenshakeOffset;
-		cameraTarget.x = Math.sin(time / 30) * screenshakeOffset;
-		//console.log(Math.sin(time) * screenshakeOffset);
+		// better? https://www.youtube.com/watch?v=1i5SB8Ct1y0
+		cameraTarget.y = (Math.sin(time / 30) * 0.5 + 0.5) * screenshakeOffset;
+		cameraTarget.z = (Math.sin(time / 30) * screenshakeOffset) / 5;
 	}
 
 	// Function to check for intersection
 	function checkIntersection() {
-		ballBoxes.forEach((ballBox) => {
+		balls.forEach((ballBox) => {
 			if (spaceShipColliderBox.intersectsSphere({ center: ballBox.pos, radius: ballBox.scale })) {
 				//console.log('Player is overlapping the target mesh!');
 				fireRef.visible = true;
 				screenshakeOffset = 1;
 				hideItem(ballBox.id);
-				//$camera.lookAt(new Vector3(0, 0.1, 0));
-				//setTimeout(resetCamera, 20);
-
 				play();
-			} else {
-				// console.log('Player is not overlapping the target mesh.');
 			}
 		});
 	}
@@ -234,10 +226,7 @@
 		}
 		function onKeyPressed(e) {
 			if (e.code === 'Space') {
-				window.ss = fireRef;
 				console.log('Space key was pressed', fireRef);
-				//				isPlaying = !isPlaying;
-				//				isPlaying ? play() : pause();
 				fireRef.visible = true;
 				play();
 			}

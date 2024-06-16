@@ -5,26 +5,18 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { itemsStore } from '../store.js';
 
-	let NEBULAS_COUNT = 10;
-	let nebulas = [];
+	let BALLS_COUNT = 10;
+	let balls = [];
 
 	// Subscribe to the store to get the initial value and updates
 	const unsubscribe = itemsStore.subscribe((value) => {
-		nebulas = value;
+		balls = value;
 	});
-
-	function removeItem(id) {
-		nebulas = nebulas.filter((item) => item.id !== id);
-		itemsStore.set(nebulas); // Update the store
-	}
 
 	// Clean up the subscription
 	onDestroy(() => {
 		unsubscribe();
 	});
-
-	// TODO:
-	// add sky sphere https://github.com/RedRoosterMobile/RingOfFire/blob/master/src/PurpleSky.js
 
 	let STARS_COUNT = 350;
 	let BALL_SPEED_MULT = 5;
@@ -74,13 +66,13 @@
 	}
 
 	// Function to create nebulas
-	function createNebulas() {
-		for (let i = 0; i < NEBULAS_COUNT; i++) {
+	function createBalls() {
+		for (let i = 0; i < BALLS_COUNT; i++) {
 			//const color = new Color(Math.random(), Math.random(), Math.random());
 			const color = new Color(colors[Math.floor(Math.random() * colors.length)])
 				.convertSRGBToLinear()
 				.multiplyScalar(1.3);
-			nebulas.push({
+			balls.push({
 				visible: true,
 				id: 'neb' + i,
 				pos: new Vector3(r(-15, -45), r(-10.5, 1.5), r(30, -45)),
@@ -91,23 +83,23 @@
 			});
 		}
 	}
-	function resetNebula(nebula) {
+	function resetBall(ball, index) {
 		const color = new Color(colors[Math.floor(Math.random() * colors.length)])
 			.convertSRGBToLinear()
 			.multiplyScalar(1.3);
-		nebula.visible = true;
-		nebula.scale = r(0.5, 1.5);
+		ball.visible = true;
+		ball.scale = r(0.5, 1.5);
 		//nebula.pos = new Vector3(r(-15-150, -45 - 150), r(-10.5, 1.5), r(30, -45));
-		nebula.pos = new Vector3(r(-15 - 150, -45 - 150), 0.5 * nebula.scale, r(30, -45));
+		ball.pos = new Vector3(r(-15 - 150, -45 - 150), 0.5 * ball.scale, r(30, -45));
 		//nebula.pos = new Vector3(r(-40 - 150, -45 - 150), 0.5 * nebula.scale, r(30, -45));
 		// nebula.pos = new Vector3(-45 - 150, 0.5 * nebula.scale, 0);
-		nebula.color = color;
-		nebula.speed = r(0.5, 1.5) * BALL_SPEED_MULT;
-		nebula.floatSpeed = r(0.5, 1.5);
+		ball.color = color;
+		ball.speed = r(0.5, 1.5) * BALL_SPEED_MULT;
+		ball.floatSpeed = r(0.5, 1.5);
 
-		return nebula;
+		balls[index] = ball;
 	}
-	createNebulas();
+	createBalls();
 
 	onMount(() => {
 		console.log('mounted', $$restProps);
@@ -120,21 +112,17 @@
 			if (star.pos.x > 40) resetStar(star);
 		});
 		stars = stars;
-
-		nebulas.forEach((nebula) => {
-			nebula.pos.x += nebula.speed * 10 * delta;
-			if (nebula.pos.x > 40) {
-				resetNebula(nebula);
-				// } else {
-				// 	if(nebula.visible==false) {
-
-				// 	}
+		let index = 0;
+		balls.forEach((ball) => {
+			ball.pos.x += ball.speed * 10 * delta;
+			if (ball.pos.x > 40) {
+				resetBall(ball, index);
+				index++;
 			}
 		});
-		nebulas = nebulas;
+		balls = balls;
 
-		//getCollidingObjects(nebulas);
-		itemsStore.set(nebulas);
+		itemsStore.set(balls);
 	});
 	const component = forwardEventHandlers();
 </script>
@@ -155,17 +143,17 @@
 			{/each}
 		</InstancedMesh>
 
-		<InstancedMesh limit={NEBULAS_COUNT} range={NEBULAS_COUNT}>
+		<InstancedMesh limit={BALLS_COUNT} range={BALLS_COUNT}>
 			<T.SphereGeometry args={[1, 32, 32]} />
 
 			<!--alphaMap={value} transparent-->
 			<T.MeshBasicMaterial />
-			{#each nebulas as nebula}
-				{#if nebula.visible}
+			{#each balls as ball}
+				{#if ball.visible}
 					<Instance
-						position={[nebula.pos.x, 0.5 * nebula.scale, nebula.pos.z]}
-						scale={[1 * nebula.scale, 1 * nebula.scale, 1 * nebula.scale]}
-						color={nebula.color}
+						position={[ball.pos.x, 0.5 * ball.scale, ball.pos.z]}
+						scale={[1 * ball.scale, 1 * ball.scale, 1 * ball.scale]}
+						color={ball.color}
 					/>
 				{/if}
 			{/each}
