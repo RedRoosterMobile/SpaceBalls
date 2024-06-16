@@ -123,7 +123,7 @@ export class ParticleSystemSimon {
 		this._sizeSpline.AddPoint(0.5, 5.0);
 		this._sizeSpline.AddPoint(1.0, 1.0);
 
-		document.addEventListener('keyup', (e) => this._onKeyUp(e), false);
+		// document.addEventListener('keyup', (e) => this._onKeyUp(e), false);
 
 		this._UpdateGeometry();
 	}

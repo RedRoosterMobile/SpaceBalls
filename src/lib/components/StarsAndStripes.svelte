@@ -1,7 +1,7 @@
 <script>
 	import { T, useFrame, forwardEventHandlers } from '@threlte/core';
 	import { Float, Instance, InstancedMesh, useTexture, Billboard } from '@threlte/extras';
-	import { Color, DoubleSide, Vector3, Group } from 'three';
+	import { Color, DoubleSide, BackSide, FrontSide, Vector3, Group } from 'three';
 	import { onDestroy, onMount } from 'svelte';
 	import { itemsStore } from '../store.js';
 
@@ -20,6 +20,7 @@
 
 	let STARS_COUNT = 350;
 	let BALL_SPEED_MULT = 5;
+	// let BALL_SPEED_MULT = 0.5;
 	let colors = ['#fcaa67', '#C75D59', '#ffffc7', '#8CC5C6', '#A5898C'];
 	let stars = [];
 
@@ -89,10 +90,15 @@
 			.multiplyScalar(1.3);
 		ball.visible = true;
 		ball.scale = r(0.5, 1.5);
+
 		//nebula.pos = new Vector3(r(-15-150, -45 - 150), r(-10.5, 1.5), r(30, -45));
-		ball.pos = new Vector3(r(-15 - 150, -45 - 150), 0.5 * ball.scale, r(30, -45));
-		//nebula.pos = new Vector3(r(-40 - 150, -45 - 150), 0.5 * nebula.scale, r(30, -45));
-		// nebula.pos = new Vector3(-45 - 150, 0.5 * nebula.scale, 0);
+
+		// back, but random
+		//ball.pos = new Vector3(r(-15 - 150, -45 - 150), 0.5 * ball.scale, r(30, -45));
+
+		// all in one line
+		ball.pos = new Vector3(-45 - 150, 0.5 * ball.scale, 0);
+
 		ball.color = color;
 		ball.speed = r(0.5, 1.5) * BALL_SPEED_MULT;
 		ball.floatSpeed = r(0.5, 1.5);

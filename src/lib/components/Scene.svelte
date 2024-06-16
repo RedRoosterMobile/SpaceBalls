@@ -7,12 +7,15 @@
 		Color,
 		Mesh,
 		MeshBasicMaterial,
+		MeshLambertMaterial,
 		PMREMGenerator,
 		PlaneGeometry,
 		Raycaster,
 		Vector2,
 		Vector3,
 		DoubleSide,
+		BackSide,
+		FrontSide,
 		BoxGeometry,
 		// https://dustinpfister.github.io/2022/05/09/threejs-box3/
 		Box3,
@@ -20,6 +23,9 @@
 		BoxHelper,
 		ObjectSpaceNormalMap,
 		TextureLoader,
+		BufferGeometry,
+		Line,
+		LineBasicMaterial,
 		SpriteMaterial,
 		AdditiveBlending,
 		Sprite
@@ -79,6 +85,7 @@
 	let angleAccelleration = 0;
 	let pmrem = new PMREMGenerator(renderer);
 	let envMapRT;
+	let animateLaser = false;
 
 	let fireRef;
 	let cameraTarget = new Vector3(0, 0, 0);
@@ -199,6 +206,7 @@
 	useRender(({ _, renderer, __ }, delta) => {
 		time += delta;
 		currentDelta = delta;
+		if (animateLaser) laser.position.x = laser.position.x - delta * 500;
 		if (intersectionPoint) {
 			// const targetY = intersectionPoint?.y || 0;
 			// translAccelleration += (targetY - translY) * 0.002; // stiffness
@@ -281,9 +289,11 @@
 	let lastExplosion = 0;
 	// Function to check for intersection
 	function checkIntersection() {
-		let hadExplosion = false;
 		balls.forEach((ballBox) => {
-			if (spaceShipColliderBox.intersectsSphere({ center: ballBox.pos, radius: ballBox.scale })) {
+			if (
+				ballBox.visible &&
+				spaceShipColliderBox.intersectsSphere({ center: ballBox.pos, radius: ballBox.scale })
+			) {
 				//console.log('Player is overlapping the target mesh!');
 				//fireRef.visible = true;
 				screenshakeOffset = 1;
@@ -291,14 +301,81 @@
 				// prevent multiple triggers
 				if (lastExplosion <= 0) {
 					explosionParticles._AddParticles(currentDelta, spaceShipRef.position);
-					hadExplosion = true;
+					lastExplosion = 1;
+					return;
 				}
-				play();
+				// play();
 			}
 		});
-		if (hadExplosion) {
-			lastExplosion = 1;
+	}
+	let laserDuration = 300; // Duration in milliseconds
+	let laser;
+	function initLaser() {
+		// Create the laser geometry and material
+		const laserGeometry = new PlaneGeometry(0.5, 10); // Width, Length of the laser
+		const laserMaterial = new MeshBasicMaterial({
+			color: 0x800080,
+			side: BackSide
+		});
+
+		// Create the laser plane
+		laser = new Mesh(laserGeometry, laserMaterial);
+		laser.rotation.set(Math.PI / 2, 0, Math.PI / 2);
+		laser.visible = false; // Initially hidden
+		scene.add(laser);
+	}
+	function rayIntersectsSphere(rayOrigin, rayDirection, sphereCenter, sphereRadius) {
+		const oc = rayOrigin.clone().sub(sphereCenter);
+		const a = rayDirection.dot(rayDirection);
+		const b = 2.0 * oc.dot(rayDirection);
+		const c = oc.dot(oc) - sphereRadius * sphereRadius;
+		const discriminant = b * b - 4 * a * c;
+		return discriminant > 0;
+	}
+	const raycaster = new Raycaster();
+	function shootLaser(position) {
+		if (animateLaser) return;
+		// Update the laser's position
+
+		const laserStartPosition = new THREE.Vector3(-laser.geometry.parameters.height / 2, 0, 0);
+		laserStartPosition.applyMatrix4(spaceShipRef.matrixWorld); // Convert to world coordinates
+		laser.position.copy(laserStartPosition);
+		laser.visible = true;
+		animateLaser = true;
+		// Perform raycasting
+		const laserDirection = new THREE.Vector3(1, 0, 0); // Adjust based on laser direction
+		laserDirection.applyQuaternion(spaceShipRef.quaternion); // Align direction with spaceship orientation
+
+		raycaster.set(laserStartPosition, laserDirection);
+
+		const sortedBalls = balls
+			.slice() // keep original order
+			.filter((ball) => ball.visible) // only alive balls
+			.sort((a, b) => laserStartPosition.distanceTo(a.pos) - laserStartPosition.distanceTo(b.pos)); // closest first
+
+		let hitBall = null;
+
+		// Check for intersections in order of proximity
+		for (const ball of sortedBalls) {
+			if (rayIntersectsSphere(laserStartPosition, laserDirection, ball.pos, ball.scale)) {
+				hitBall = ball;
+				break;
+			}
 		}
+		if (hitBall) {
+			// Handle hit (e.g., remove the object, play a sound, etc.)
+			handleHit(hitBall);
+		}
+
+		// Hide the laser after a short duration
+		setTimeout(() => {
+			laser.visible = false;
+			animateLaser = false; // also prevents further shoots
+		}, laserDuration);
+	}
+	function handleHit(ball) {
+		hideItem(ball.id);
+		explosionParticles._AddParticles(currentDelta, ball.pos);
 	}
 
 	onMount(() => {
@@ -338,10 +415,11 @@
 		}
 		function onKeyPressed(e) {
 			if (e.code === 'Space') {
-				console.log('Space key was pressed', spaceShipRef.position);
+				//console.log('Space key was pressed', spaceShipRef.position);
 				//fireRef.visible = true;
-				explosionParticles._AddParticles(currentDelta, spaceShipRef.position);
-				play();
+				//explosionParticles._AddParticles(currentDelta, spaceShipRef.position);
+				// play();
+				shootLaser(spaceShipRef.position);
 			}
 		}
 
@@ -354,10 +432,10 @@
 		// const system = new ParticleSystem();
 		// system.addEmitter(createEmitter()).addRenderer(new SpriteRenderer(scene, THREE));
 		// console.log(system);
-		console.log(scene, camera.current);
 		const params = { parent: scene, camera: camera.current };
-		console.log(params);
+		//console.log(params);
 		explosionParticles = new ParticleSystemSimon(params);
+		initLaser();
 
 		return () => {
 			window.removeEventListener('pointermove', onPointerMove);
@@ -366,18 +444,20 @@
 	});
 
 	// sprite hooks
-	let play = () => {
-		console.log('play');
-	};
-	let pause = () => {
-		console.log('pause');
-	};
-	let onEnd = () => {
-		console.log('ended');
-	};
-	let onStart = () => {
-		console.log('started');
-	};
+	// let play = () => {
+	// 	console.log('play');
+	// };
+	// let pause = () => {
+	// 	console.log('pause');
+	// };
+	// let onEnd = () => {
+	// 	console.log('ended');
+	// };
+	// let onStart = () => {
+	// 	console.log('started');
+	// };
+
+	// laser: super long, thin billboards https://youtu.be/LltugBg4dtk?si=wwXuxxDQYK3lDOa7&t=501
 </script>
 
 <!-- original position={[-5, 6, 10]} -->
