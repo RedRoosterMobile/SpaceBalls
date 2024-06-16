@@ -15,7 +15,7 @@
 	});
 </script>
 
-<T.Sprite position.y={-2.3}>
-	<AnimatedSpriteMaterial textureUrl="/textures/sprites/fire.png" totalFrames={8} fps={10} />
+<T.Sprite position.y={-2.3} visible={$$restProps.visible}>
+	<AnimatedSpriteMaterial textureUrl="/textures/fire.png" totalFrames={8} fps={10} />
 	<T is={light} distance={0.8} decay={0.5} position.y={-0.2} position.z={0.02} />
 </T.Sprite>

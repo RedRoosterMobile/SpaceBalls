@@ -1,5 +1,5 @@
 {
-  "name": "spaceship-header",
+  "name": "spaceballs",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -12,21 +12,23 @@
   },
   "devDependencies": {
     "@sveltejs/adapter-auto": "^2.0.0",
-    "@sveltejs/kit": "^1.20.4",
+    "@sveltejs/kit": "^1.27.4",
     "@threlte/core": "^7.3.0",
     "@threlte/extras": "^8.11.2",
-    "@threlte/rapier":"^2.0.0",
-    "@dimforge/rapier3d-compat":"^0.13.1",
-
-
     "prettier": "^2.8.0",
     "prettier-plugin-svelte": "^2.10.1",
     "svelte": "^4.0.5",
     "three": "^0.157.0",
+    "three-addons": "^1.2.0",
+    "@threlte/rapier":"^2.0.0",
+    "@dimforge/rapier3d-compat":"^0.13.1",
     "vite": "^4.4.2"
   },
   "type": "module",
   "dependencies": {
-    "@threlte/gltf": "^2.0.0"
+    "@threlte/gltf": "^2.0.0",
+    "@types/three-nebula": "^10.0.4",
+    "@babel/runtime": "^7.24.5",
+    "three-nebula": "^10.0.3"
   }
 }

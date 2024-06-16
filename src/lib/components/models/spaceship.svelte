@@ -21,7 +21,6 @@ Title: Rusty Spaceship - Orange
 	import { T, forwardEventHandlers, useFrame } from '@threlte/core';
 	import { useGltf } from '@threlte/extras';
 	import { useTexture } from '@threlte/extras';
-	import { AutoColliders, RigidBody } from '@threlte/rapier';
 
 	export const ref = new Group();
 	let afterBurnerScaleY = 1;

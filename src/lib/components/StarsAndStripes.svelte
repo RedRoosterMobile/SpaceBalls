@@ -125,6 +125,19 @@
 		itemsStore.set(balls);
 	});
 	const component = forwardEventHandlers();
+	function lookAtOrigin(position) {
+		const dx = -position.x;
+		const dy = -position.y;
+		const dz = -position.z;
+
+		const distanceXY = Math.sqrt(dx * dx + dy * dy);
+		const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+		const rotationY = Math.atan2(dx, dz);
+		const rotationX = Math.atan2(dy, distanceXY);
+
+		return [rotationX, 0, 0]; // Assuming no roll needed
+	}
 </script>
 
 <T is={ref} dispose={false} {...$$restProps} bind:this={$component}>
@@ -138,8 +151,9 @@
 					position={[star.pos.x, star.pos.y, star.pos.z]}
 					scale={[star.len, 1, 1]}
 					color={star.color}
-					rotation.x={Math.PI / 2}
+					rotation={lookAtOrigin(star.pos)}
 				/>
+				<!-- //rotation.x={Math.PI / 2} -->
 			{/each}
 		</InstancedMesh>
 

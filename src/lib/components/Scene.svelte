@@ -2,6 +2,7 @@
 	import { T, useRender, useThrelte } from '@threlte/core';
 	import { OrbitControls, Sky, Stars, Grid, AnimatedSpriteMaterial } from '@threlte/extras';
 	import Spaceship from './models/spaceship.svelte';
+	import { ParticleSystemSimon } from '../classes/ParticleSystemSimon';
 	import {
 		Color,
 		Mesh,
@@ -13,20 +14,48 @@
 		Vector3,
 		DoubleSide,
 		BoxGeometry,
+		// https://dustinpfister.github.io/2022/05/09/threejs-box3/
 		Box3,
 		//Box3Helper,
 		BoxHelper,
-		ObjectSpaceNormalMap
+		ObjectSpaceNormalMap,
+		TextureLoader,
+		SpriteMaterial,
+		AdditiveBlending,
+		Sprite
 	} from 'three';
+	import * as THREE from 'three';
+
+	import ParticleSystem, {
+		Body,
+		Emitter,
+		Gravity,
+		Life,
+		Mass,
+		Position,
+		RadialVelocity,
+		RandomDrift,
+		Rate,
+		Scale,
+		Span,
+		SphereZone,
+		SpriteRenderer,
+		Vector3D,
+		ease
+	} from 'three-nebula';
 	import { onMount, onDestroy } from 'svelte';
 	import StarsAndStripes from './StarsAndStripes.svelte';
 	import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 	import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 	import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+	import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 	import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+	import { RGBShiftShader } from 'three/addons/shaders/RGBShiftShader.js';
+	import { DotScreenShader } from 'three/addons/shaders/DotScreenShader.js';
 	import PurpleSky from './PurpleSky.svelte';
 	import { Box3Helper } from 'three';
 	import { itemsStore } from '../store.js';
+	import Fire from './Fire.svelte';
 
 	function r(min, max) {
 		let diff = Math.random() * (max - min);
@@ -56,6 +85,60 @@
 	// takes control of the render loop, unlike useFrame
 	// https://threlte.xyz/docs/reference/core/use-render
 	let time = 0;
+	const createSprite = () => {
+		var map = new TextureLoader().load('/textures/explosion.png');
+		var material = new SpriteMaterial({
+			map: map,
+			color: 0xff0000,
+			blending: AdditiveBlending,
+			fog: true
+		});
+		console.log('loaded particle thing');
+		return new Sprite(material);
+	};
+
+	const createEmitter = () => {
+		const emitter = new Emitter();
+
+		return emitter
+			.setRate(new Rate(new Span(1, 1), new Span(0.05, 0.1)))
+			.addInitializers([
+				new Body(createSprite()),
+				new Mass(1),
+				new Life(1, 3),
+				new Position(new SphereZone(2)),
+				new RadialVelocity(new Span(50, 80), new Vector3D(0, 1, 0), 30)
+			])
+			.addBehaviours([
+				new RandomDrift(10, 10, 10, 0.05),
+				new Scale(new Span(2, 3.5), 0),
+				new Gravity(6),
+				new Color('#FF0026', ['#ffff00', '#ffff11'], Infinity, ease.easeOutSine)
+			])
+			.setPosition({ x: 2, y: 2 })
+			.emit();
+	};
+	// const createEmitter = () => {
+	// 	const emitter = new Emitter();
+
+	// 	return emitter
+	// 		.setRate(new Rate(new Span(10, 15), new Span(0.05, 0.1)))
+	// 		.addInitializers([
+	// 			new Body(createSprite()),
+	// 			new Mass(1),
+	// 			new Life(1, 3),
+	// 			new Position(new SphereZone(20)),
+	// 			new RadialVelocity(new Span(500, 800), new Vector3D(0, 1, 0), 30)
+	// 		])
+	// 		.addBehaviours([
+	// 			new RandomDrift(10, 10, 10, 0.05),
+	// 			new Scale(new Span(2, 3.5), 0),
+	// 			new Gravity(6),
+	// 			new Color('#FF0026', ['#ffff00', '#ffff11'], Infinity, ease.easeOutSine)
+	// 		])
+	// 		.setPosition({ x: 2, y: 2 })
+	// 		.emit();
+	// };
 
 	const spaceShipColliderBox = new Box3();
 	let balls = [];
@@ -91,15 +174,31 @@
 		const renderPass = new RenderPass(scene, camera.current);
 		composer.addPass(renderPass);
 
-		const bloomPass = new UnrealBloomPass(new Vector2(innerWidth, innerHeight), 0.275, 1, 0);
-		composer.addPass(bloomPass);
+		// const bloomPass = new UnrealBloomPass(new Vector2(innerWidth, innerHeight), 0.275, 1, 0);
+		// composer.addPass(bloomPass);
+
+		// const effect1 = new ShaderPass(DotScreenShader);
+		// effect1.uniforms['scale'].value = 4;
+		// composer.addPass(effect1);
+
+		// cool stuff
+		// https://threejs.org/examples/?q=post#webgl_postprocessing_advanced
+
+		// const effect2 = new ShaderPass(RGBShiftShader);
+		// effect2.uniforms['amount'].value = 0.0015;
+		// composer.addPass(effect2);
 
 		const outputPass = new OutputPass();
 		composer.addPass(outputPass);
 	};
 
-	useRender(({ _ }, delta) => {
+	//useRender(({ _ }, delta) => {
+
+	let ps;
+	let currentDelta = 0;
+	useRender(({ _, renderer, __ }, delta) => {
 		time += delta;
+		currentDelta = delta;
 		if (intersectionPoint) {
 			// const targetY = intersectionPoint?.y || 0;
 			// translAccelleration += (targetY - translY) * 0.002; // stiffness
@@ -129,10 +228,7 @@
 			const angle = Math.acos(dirCos) - Math.PI * 0.5;
 			angleAccelleration += (angle - angleY) * 0.01; // stiffness
 			angleAccelleration *= 0.85; // damping
-			//console.log(distanceFromMouseBaseZ,magic);
-			//angleAccelleration *= (1-distanceFromMouseBaseZ);
 			angleY += angleAccelleration;
-			//angleY*=(distanceFromMouseBaseZ*3);
 		}
 
 		if (envMapRT) envMapRT.dispose();
@@ -154,13 +250,20 @@
 		//$camera.position.z += Math.sin(time)*.0001;
 		//$camera.position.z = Math.sin(time) * 0.1;
 		screenshake();
-		screenshakeOffset = Math.max(screenshakeOffset - delta, 0);
+		screenshakeOffset = Math.max(screenshakeOffset - delta * 2, 0);
+		lastExplosion = Math.max(lastExplosion - delta, 0);
 		$camera.lookAt(cameraTarget);
 		// billboarding
 		//planeRef.lookAt(camera.current.position);
 		//angleAccelleration *= 0.2;
 		updateBoundingBoxes();
 		checkIntersection();
+
+		//ps?.Step(delta);
+		if (ps) {
+			ps._UpdateParticles(delta);
+			ps._UpdateGeometry();
+		}
 
 		composer.render();
 	});
@@ -176,6 +279,7 @@
 		cameraTarget.z = (Math.sin(time / 30) * screenshakeOffset) / 5;
 	}
 
+	let lastExplosion = 0;
 	// Function to check for intersection
 	function checkIntersection() {
 		balls.forEach((ballBox) => {
@@ -184,6 +288,10 @@
 				fireRef.visible = true;
 				screenshakeOffset = 1;
 				hideItem(ballBox.id);
+				if (lastExplosion <= 0) {
+					ps._AddParticles(currentDelta, spaceShipRef.position);
+					lastExplosion = 1;
+				}
 				play();
 			}
 		});
@@ -226,8 +334,9 @@
 		}
 		function onKeyPressed(e) {
 			if (e.code === 'Space') {
-				console.log('Space key was pressed', fireRef);
+				console.log('Space key was pressed', spaceShipRef.position);
 				fireRef.visible = true;
+				ps._AddParticles(currentDelta, spaceShipRef.position);
 				play();
 			}
 		}
@@ -236,6 +345,16 @@
 		fireRef.visible = false;
 		window.addEventListener('keydown', onKeyPressed);
 		window.addEventListener('pointermove', onPointerMove);
+
+		// not  working... add particles??
+		// const system = new ParticleSystem();
+		// system.addEmitter(createEmitter()).addRenderer(new SpriteRenderer(scene, THREE));
+		// console.log(system);
+		console.log(scene, camera.current);
+		const params = { parent: scene, camera: camera.current };
+		console.log(params);
+		ps = new ParticleSystemSimon(params);
+
 		return () => {
 			window.removeEventListener('pointermove', onPointerMove);
 			window.removeEventListener('keydown', onKeyPressed);
@@ -303,3 +422,4 @@
 		fps={20}
 	/>
 </T.Sprite>
+<!-- <Fire visible={false} /> -->
