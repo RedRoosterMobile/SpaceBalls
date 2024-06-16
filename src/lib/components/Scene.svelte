@@ -184,8 +184,8 @@
 		const renderPass = new RenderPass(scene, camera.current);
 		composer.addPass(renderPass);
 
-		// const bloomPass = new UnrealBloomPass(new Vector2(innerWidth, innerHeight), 0.275, 1, 0);
-		// composer.addPass(bloomPass);
+		const bloomPass = new UnrealBloomPass(new Vector2(innerWidth, innerHeight), 0.275, 1, 0);
+		composer.addPass(bloomPass);
 
 		// const effect1 = new ShaderPass(DotScreenShader);
 		// effect1.uniforms['scale'].value = 4;
@@ -384,6 +384,7 @@
 	}
 	function handleHit(ball) {
 		hideItem(ball.id);
+		screenshakeOffset = 0.1;
 		explosionParticles._AddParticles(currentDelta, ball.pos);
 		if (sfxExplosion.isPlaying) sfxExplosion.stop();
 		sfxExplosion.position.copy(ball.pos);
