@@ -29,7 +29,7 @@
 			brightness: { value: brightness }
 		};
 		skyGeometry = new SphereGeometry(size, 32, 15);
-    
+
 		skyMaterial = new ShaderMaterial({
 			uniforms: uniforms,
 			vertexShader: `
@@ -118,7 +118,7 @@ void main()
     // coordiantes
     //vec2 p = vUv;
     vec2 p = vUv * 2.0 - 1.0;  // Convert UV to -1 to 1 range
-    
+        
 
     vec2 origin = vec2(0.0, 0.0); // origin point
     origin.x+=sin(iTime/-200.)*0.2;
@@ -143,6 +143,12 @@ void main()
 
     // base color pattern
     vec3 col = getColor( 0.5*length(p) );
+    // Darken the color
+    col *= 0.01;
+
+    // Make the red component blink over time
+    // Make the red component blink over time
+    col.r *= abs(sin(iTime * 3.0)*0.5+0.5)*5.; // Adjust the frequency as needed
     gl_FragColor = vec4( col, .01 );
 }
 `;
@@ -173,9 +179,17 @@ void main()
 		// animate();
 	}
 	glitter();
-	useFrame((time, _) => {
-		skyMaterial.uniforms.iTime.value = time.clock.elapsedTime;
+	let time = 0;
+	useFrame(({ camera }, delta) => {
+		time += delta;
+		skyMaterial.uniforms.iTime.value = time;
 	});
 </script>
 
-<T.Mesh position={skyPosition} material={skyMaterial} geometry={skyGeometry} rotation.z={Math.PI} receiveShadow/>
+<T.Mesh
+	position={skyPosition}
+	material={skyMaterial}
+	geometry={skyGeometry}
+	rotation.z={Math.PI}
+	receiveShadow
+/>

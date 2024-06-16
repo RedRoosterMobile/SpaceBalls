@@ -2,9 +2,26 @@
 	import { T, useFrame, forwardEventHandlers } from '@threlte/core';
 	import { Float, Instance, InstancedMesh, useTexture, Billboard } from '@threlte/extras';
 	import { Color, DoubleSide, Vector3, Group } from 'three';
-	import { onMount } from 'svelte';
-	import { AutoColliders, RigidBody, Collider } from '@threlte/rapier';
-	//import { Collider } from '@dimforge/rapier3d-compat';
+	import { onDestroy, onMount } from 'svelte';
+	import { itemsStore } from '../store.js';
+
+	let NEBULAS_COUNT = 10;
+	let nebulas = [];
+
+	// Subscribe to the store to get the initial value and updates
+	const unsubscribe = itemsStore.subscribe((value) => {
+		nebulas = value;
+	});
+
+	function removeItem(id) {
+		nebulas = nebulas.filter((item) => item.id !== id);
+		itemsStore.set(nebulas); // Update the store
+	}
+
+	// Clean up the subscription
+	onDestroy(() => {
+		unsubscribe();
+	});
 
 	// TODO:
 	// add sky sphere https://github.com/RedRoosterMobile/RingOfFire/blob/master/src/PurpleSky.js
@@ -14,12 +31,9 @@
 	let colors = ['#fcaa67', '#C75D59', '#ffffc7', '#8CC5C6', '#A5898C'];
 	let stars = [];
 
-	let NEBULAS_COUNT = 10;
-	let nebulas = [];
-
 	let phase = 0;
 
-	let getCollidingObjects = $$restProps.getCollidingObjects;
+	//let getCollidingObjects = $$restProps.getCollidingObjects;
 
 	export const ref = new Group();
 
@@ -67,6 +81,8 @@
 				.convertSRGBToLinear()
 				.multiplyScalar(1.3);
 			nebulas.push({
+				visible: true,
+				id: 'neb' + i,
 				pos: new Vector3(r(-15, -45), r(-10.5, 1.5), r(30, -45)),
 				color,
 				scale: r(0.5, 1.5),
@@ -79,13 +95,13 @@
 		const color = new Color(colors[Math.floor(Math.random() * colors.length)])
 			.convertSRGBToLinear()
 			.multiplyScalar(1.3);
-		nebula.scale = 1;
-		//nebula.pos = new Vector3(r(-15, -45 - 150), r(-10.5, 1.5), r(30, -45));
-		//nebula.pos = new Vector3(r(-15, -45 - 150), 0.5 * nebula.scale, r(30, -45));
+		nebula.visible = true;
+		nebula.scale = r(0.5, 1.5);
+		//nebula.pos = new Vector3(r(-15-150, -45 - 150), r(-10.5, 1.5), r(30, -45));
+		nebula.pos = new Vector3(r(-15 - 150, -45 - 150), 0.5 * nebula.scale, r(30, -45));
 		//nebula.pos = new Vector3(r(-40 - 150, -45 - 150), 0.5 * nebula.scale, r(30, -45));
-		nebula.pos = new Vector3(-45 - 150, 0.5 * nebula.scale, 0);
+		// nebula.pos = new Vector3(-45 - 150, 0.5 * nebula.scale, 0);
 		nebula.color = color;
-
 		nebula.speed = r(0.5, 1.5) * BALL_SPEED_MULT;
 		nebula.floatSpeed = r(0.5, 1.5);
 
@@ -107,20 +123,25 @@
 
 		nebulas.forEach((nebula) => {
 			nebula.pos.x += nebula.speed * 10 * delta;
-			if (nebula.pos.x > 40) resetNebula(nebula);
+			if (nebula.pos.x > 40) {
+				resetNebula(nebula);
+				// } else {
+				// 	if(nebula.visible==false) {
+
+				// 	}
+			}
 		});
 		nebulas = nebulas;
 
-		getCollidingObjects(nebulas);
+		//getCollidingObjects(nebulas);
+		itemsStore.set(nebulas);
 	});
 	const component = forwardEventHandlers();
-
-	// for stripes rotation.x={Math.PI / 2}
 </script>
 
 <T is={ref} dispose={false} {...$$restProps} bind:this={$component}>
 	{#await map then value}
-		<!-- <InstancedMesh limit={STARS_COUNT} range={STARS_COUNT}>
+		<InstancedMesh limit={STARS_COUNT} range={STARS_COUNT}>
 			<T.PlaneGeometry args={[1, 0.05]} />
 			<T.MeshBasicMaterial side={DoubleSide} alphaMap={value} transparent />
 
@@ -132,7 +153,7 @@
 					rotation.x={Math.PI / 2}
 				/>
 			{/each}
-		</InstancedMesh> -->
+		</InstancedMesh>
 
 		<InstancedMesh limit={NEBULAS_COUNT} range={NEBULAS_COUNT}>
 			<T.SphereGeometry args={[1, 32, 32]} />
@@ -140,22 +161,13 @@
 			<!--alphaMap={value} transparent-->
 			<T.MeshBasicMaterial />
 			{#each nebulas as nebula}
-				<!-- <Float
-					speed={30 * nebula.floatSpeed}
-					floatingRange={[
-						[-nebula.floatSpeed, nebula.floatSpeed],
-						[-nebula.speed * Math.sin(phase), nebula.speed * Math.sin(phase)],
-						[-nebula.speed * Math.cos(phase), nebula.speed * Math.cos(phase)]
-					]}
-				> -->
-
-				<Instance
-					position={[nebula.pos.x, 0.5 * nebula.scale, nebula.pos.z]}
-					scale={[1 * nebula.scale, 1 * nebula.scale, 1 * nebula.scale]}
-					color={nebula.color}
-				/>
-
-				<!-- </Float> -->
+				{#if nebula.visible}
+					<Instance
+						position={[nebula.pos.x, 0.5 * nebula.scale, nebula.pos.z]}
+						scale={[1 * nebula.scale, 1 * nebula.scale, 1 * nebula.scale]}
+						color={nebula.color}
+					/>
+				{/if}
 			{/each}
 		</InstancedMesh>
 	{/await}

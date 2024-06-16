@@ -2,7 +2,6 @@
 	import { T, useRender, useThrelte } from '@threlte/core';
 	import { OrbitControls, Sky, Stars, Grid, AnimatedSpriteMaterial } from '@threlte/extras';
 	import Spaceship from './models/spaceship.svelte';
-	import { AutoColliders, Collider, RigidBody } from '@threlte/rapier';
 	import {
 		Color,
 		Mesh,
@@ -19,7 +18,7 @@
 		BoxHelper,
 		ObjectSpaceNormalMap
 	} from 'three';
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import StarsAndStripes from './StarsAndStripes.svelte';
 	import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 	import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
@@ -27,6 +26,12 @@
 	import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 	import PurpleSky from './PurpleSky.svelte';
 	import { Box3Helper } from 'three';
+	import { itemsStore } from '../store.js';
+
+	function r(min, max) {
+		let diff = Math.random() * (max - min);
+		return min + diff;
+	}
 
 	const { scene, camera, renderer } = useThrelte();
 	let spaceShipRef;
@@ -46,15 +51,38 @@
 	let pmrem = new PMREMGenerator(renderer);
 	let envMapRT;
 
-	let planeRef;
-
-	let fire;
-
-	// const playerBoundingBox = new Box3().setFromObject(playerBodyRef.current);
-	// console.log(playerBodyRef, playerBoundingBox);
+	let fireRef;
+	let cameraTarget = new Vector3(0, 0, 0);
+	// takes control of the render loop, unlike useFrame
+	// https://threlte.xyz/docs/reference/core/use-render
+	let time = 0;
 
 	const spaceShipColliderBox = new Box3();
 	let ballBoxes = [];
+	// Subscribe to the store to get the initial value and updates
+	const unsubscribe = itemsStore.subscribe((value) => {
+		ballBoxes = value;
+	});
+
+	// this will kick it out of the array..
+	// how to add new ones?
+	function removeItem(id) {
+		ballBoxes = ballBoxes.filter((item) => item.id !== id);
+		itemsStore.set(ballBoxes); // Update the store
+	}
+
+	function hideItem(id) {
+		ballBoxes = ballBoxes.map((item) => {
+			if (item.id == id) item.visible = false;
+			return item;
+		});
+		itemsStore.set(ballBoxes); // Update the store
+	}
+
+	// Clean up the subscription
+	onDestroy(() => {
+		unsubscribe();
+	});
 
 	const composer = new EffectComposer(renderer);
 	composer.setSize(innerWidth, innerHeight);
@@ -63,16 +91,15 @@
 		const renderPass = new RenderPass(scene, camera.current);
 		composer.addPass(renderPass);
 
-		// const bloomPass = new UnrealBloomPass(new Vector2(innerWidth, innerHeight), 0.275, 1, 0);
-		// composer.addPass(bloomPass);
+		const bloomPass = new UnrealBloomPass(new Vector2(innerWidth, innerHeight), 0.275, 1, 0);
+		composer.addPass(bloomPass);
 
 		const outputPass = new OutputPass();
 		composer.addPass(outputPass);
 	};
 
-	// takes control of the render loop, unlike useFrame
-	// https://threlte.xyz/docs/reference/core/use-render
-	useRender(({ scene }) => {
+	useRender(({ _ }, delta) => {
+		time += delta;
 		if (intersectionPoint) {
 			// const targetY = intersectionPoint?.y || 0;
 			// translAccelleration += (targetY - translY) * 0.002; // stiffness
@@ -124,11 +151,17 @@
 			}
 		});
 
+		//$camera.position.z += Math.sin(time)*.0001;
+		//$camera.position.z = Math.sin(time) * 0.1;
+		screenshake();
+		screenshakeOffset = Math.max(screenshakeOffset - delta, 0);
+		$camera.lookAt(cameraTarget);
 		// billboarding
 		//planeRef.lookAt(camera.current.position);
 		//angleAccelleration *= 0.2;
 		updateBoundingBoxes();
 		checkIntersection();
+
 		composer.render();
 	});
 	// Function to update the bounding boxes
@@ -136,25 +169,32 @@
 		spaceShipColliderBox.setFromObject(playerBodyRef);
 	}
 
+	let screenshakeOffset = 0;
+	function screenshake() {
+		// better https://www.youtube.com/watch?v=1i5SB8Ct1y0
+
+		//screenshakeOffsxt=Math
+		cameraTarget.y = Math.sin(time / 30) * screenshakeOffset;
+		cameraTarget.x = Math.sin(time / 30) * screenshakeOffset;
+		//console.log(Math.sin(time) * screenshakeOffset);
+	}
+
 	// Function to check for intersection
 	function checkIntersection() {
 		ballBoxes.forEach((ballBox) => {
-			if (
-				spaceShipColliderBox.intersectsSphere({ center: ballBox.pos, radius: ballBox.scale })
-			) {
-				console.log('Player is overlapping the target mesh!');
+			if (spaceShipColliderBox.intersectsSphere({ center: ballBox.pos, radius: ballBox.scale })) {
+				//console.log('Player is overlapping the target mesh!');
+				fireRef.visible = true;
+				screenshakeOffset = 1;
+				hideItem(ballBox.id);
+				//$camera.lookAt(new Vector3(0, 0.1, 0));
+				//setTimeout(resetCamera, 20);
+
+				play();
 			} else {
 				// console.log('Player is not overlapping the target mesh.');
 			}
 		});
-	}
-
-	function getCollidingObjects(objects) {
-		// console.log(objects);
-		// ballBoxes = objects.map((object) => {
-		// 	return new Box3().setFromCenterAndSize(object.pos, object.scale);
-		// });
-		ballBoxes = objects;
 	}
 
 	onMount(() => {
@@ -182,6 +222,7 @@
 			pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
 			raycaster.setFromCamera(pointer, $camera);
+
 			const intersects = raycaster.intersectObject(mesh);
 			intersectionPoint = intersects[0]?.point;
 
@@ -193,14 +234,17 @@
 		}
 		function onKeyPressed(e) {
 			if (e.code === 'Space') {
-				console.log('Space key was pressed');
-				//const playerBoundingBox = new Box3().setFromObject(spaceShipRef.current);
-				//console.log(playerBoundingBox);
-				//console.log(playerBodyRef);
+				window.ss = fireRef;
+				console.log('Space key was pressed', fireRef);
+				//				isPlaying = !isPlaying;
+				//				isPlaying ? play() : pause();
+				fireRef.visible = true;
+				play();
 			}
 		}
 
-		// playerBodyRef.visible = false;
+		playerBodyRef.visible = false;
+		fireRef.visible = false;
 		window.addEventListener('keydown', onKeyPressed);
 		window.addEventListener('pointermove', onPointerMove);
 		return () => {
@@ -208,6 +252,20 @@
 			window.removeEventListener('keydown', onKeyPressed);
 		};
 	});
+
+	// sprite hooks
+	let play = () => {
+		console.log('play');
+	};
+	let pause = () => {
+		console.log('pause');
+	};
+	let onEnd = () => {
+		console.log('ended');
+	};
+	let onStart = () => {
+		console.log('started');
+	};
 </script>
 
 <!-- original position={[-5, 6, 10]} -->
@@ -236,24 +294,23 @@
 	material={new MeshBasicMaterial()}
 />
 
-<!-- <T.Group position={[0, 0, translZ]}>
-	<RigidBody type={'kinematic'} gravityScale={0}>
-		<Collider shape={'cuboid'} sensor={true} args={[0.125, 0.125, 0.125]}>
-			<T.Mesh
-				geometry={new BoxGeometry(1, 1, 1)}
-				position={[0, 0, 0]}
-				material={new MeshBasicMaterial()}
-				bind:ref={playerBodyRef}
-			/>
-		</Collider>
-	</RigidBody>
-</T.Group> -->
-
-<StarsAndStripes bind:ref={starsAndStripesRef} {getCollidingObjects} />
+<StarsAndStripes bind:ref={starsAndStripesRef} />
 <!-- https://threlte.xyz/docs/reference/extras/stars -->
-<!-- <Stars lightness={0.1} factor={6}  radius={50}/> -->
-<!-- <PurpleSky/> -->
-<Grid sectionThickness={1} infiniteGrid cellColor="#dddddd" cellSize={2} />
-<T.Sprite position={[0, 1, translZ]}>
-	<AnimatedSpriteMaterial textureUrl="/textures/fire.png" totalFrames={8} fps={10} />
+<!-- <Stars lightness={0.1} factor={6} radius={50} /> -->
+<PurpleSky />
+<!-- <Grid sectionThickness={1} infiniteGrid cellColor="#dddddd" cellSize={2} /> -->
+<T.Sprite position={[0, 1, translZ]} bind:ref={fireRef}>
+	<AnimatedSpriteMaterial
+		bind:play
+		bind:pause
+		autoplay={false}
+		textureUrl="/textures/explosion.png"
+		totalFrames={16}
+		rows={4}
+		on:end={onEnd}
+		on:start={onStart}
+		loop={false}
+		columns={4}
+		fps={20}
+	/>
 </T.Sprite>
