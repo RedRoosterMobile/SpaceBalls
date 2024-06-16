@@ -69,7 +69,7 @@ export class ParticleSystemSimon {
 	constructor(params) {
 		const uniforms = {
 			diffuseTexture: {
-				value: new THREE.TextureLoader().load('/textures/fire_big.png')
+				value: new THREE.TextureLoader().load('./textures/fire_big.png')
 			},
 			pointMultiplier: {
 				value: window.innerHeight / (2.0 * Math.tan((0.5 * 60.0 * Math.PI) / 180.0))

@@ -42,6 +42,11 @@ Title: Rusty Spaceship - Orange
 		console.log(map);
 	});
 
+	const manipulateRocketEngineBloom = (gltf) => {
+		gltf.materials.spaceship_racer.emissive.b = 268.1;
+		return gltf.materials.spaceship_racer;
+	};
+
 	//<T.CylinderGeometry args={[70, 0, 1600, 15]} />
 	//const cylinderGeo = new CylinderGeometry(70, 0, 1600, 15);
 	//window.cg = cylinderGeo;
@@ -69,12 +74,12 @@ Title: Rusty Spaceship - Orange
 				material={gltf.materials.spaceship_racer}
 				position={[739.26, -64.81, 64.77]}
 			/>
-
+			<!-- rocket engine -->
 			<T.Mesh
 				castShadow
 				receiveShadow
 				geometry={gltf.nodes.Cylinder002_spaceship_racer_0.geometry}
-				material={gltf.materials.spaceship_racer}
+				material={manipulateRocketEngineBloom(gltf)}
 				position={[739.69, -59.39, -553.38]}
 				rotation={[Math.PI / 2, 0, 0]}
 			/>

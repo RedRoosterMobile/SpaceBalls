@@ -71,7 +71,7 @@ export class GeneralParticleSystemSimon {
 		const uniforms = {
 			diffuseTexture: {
 				value: new THREE.TextureLoader().load(
-					params.texture ? params.texture : '/textures/fire_big.png'
+					params.texture ? params.texture : './textures/fire_big.png'
 				)
 			},
 			pointMultiplier: {

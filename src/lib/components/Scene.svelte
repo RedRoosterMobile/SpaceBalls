@@ -484,14 +484,14 @@
 
 		// load a sound and set it as the Audio object's buffer
 		const audioLoader = new AudioLoader();
-		audioLoader.load('/audio/Laser.mp3', function (buffer) {
+		audioLoader.load('./audio/Laser.mp3', function (buffer) {
 			sfxLaser.setBuffer(buffer);
 			sfxLaser.setLoop(false);
 			sfxLaser.setVolume(0.5);
 		});
 
 		sfxExplosion = new Audio(listener);
-		audioLoader.load('/audio/Explosion.mp3', function (buffer) {
+		audioLoader.load('./audio/Explosion.mp3', function (buffer) {
 			sfxExplosion.setBuffer(buffer);
 			sfxExplosion.setLoop(false);
 			sfxExplosion.setVolume(0.5);
