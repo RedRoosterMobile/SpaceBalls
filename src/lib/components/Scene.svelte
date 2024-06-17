@@ -390,7 +390,7 @@
 			currentDelta,
 			ball.pos,
 			ball.color,
-			new Vector3(r(-1, 1), r(-1, 1), r(-1, 1))
+			new Vector3(r(ball.speed, ball.speed * 5), r(-1, 1), r(-1, 1)) //r(-1, 1), r(-1, 1))
 		);
 		if (sfxExplosion.isPlaying) sfxExplosion.stop();
 		sfxExplosion.position.copy(ball.pos);
