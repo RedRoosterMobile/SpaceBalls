@@ -134,27 +134,6 @@
 			.setPosition({ x: 2, y: 2 })
 			.emit();
 	};
-	// const createEmitter = () => {
-	// 	const emitter = new Emitter();
-
-	// 	return emitter
-	// 		.setRate(new Rate(new Span(10, 15), new Span(0.05, 0.1)))
-	// 		.addInitializers([
-	// 			new Body(createSprite()),
-	// 			new Mass(1),
-	// 			new Life(1, 3),
-	// 			new Position(new SphereZone(20)),
-	// 			new RadialVelocity(new Span(500, 800), new Vector3D(0, 1, 0), 30)
-	// 		])
-	// 		.addBehaviours([
-	// 			new RandomDrift(10, 10, 10, 0.05),
-	// 			new Scale(new Span(2, 3.5), 0),
-	// 			new Gravity(6),
-	// 			new Color('#FF0026', ['#ffff00', '#ffff11'], Infinity, ease.easeOutSine)
-	// 		])
-	// 		.setPosition({ x: 2, y: 2 })
-	// 		.emit();
-	// };
 
 	const spaceShipColliderBox = new Box3();
 	let balls = [];
@@ -188,6 +167,8 @@
 
 	const setupEffectComposer = () => {
 		const renderPass = new RenderPass(scene, camera.current);
+		console.log('far', camera.current.far); // outputs: 2000!!!
+		console.log('near', camera.current.near); // outputs: 0.1
 		composer.addPass(renderPass);
 
 		const bloomPass = new UnrealBloomPass(new Vector2(innerWidth, innerHeight), 0.275, 1, 0);
@@ -287,7 +268,7 @@
 
 		composer.render();
 	});
-	
+
 	function updateSpaceshipBoundingBoxes() {
 		spaceShipColliderBox.setFromObject(playerBodyRef);
 	}
@@ -301,23 +282,25 @@
 
 	let lastExplosion = 0;
 	function checkSpaceshipIntersection() {
-		balls.forEach((ballBox) => {
+		balls.forEach((ball) => {
 			if (
-				ballBox.visible &&
-				spaceShipColliderBox.intersectsSphere({ center: ballBox.pos, radius: ballBox.scale })
+				ball.visible &&
+				spaceShipColliderBox.intersectsSphere({ center: ball.pos, radius: ball.scale })
 			) {
 				//console.log('Player is overlapping the target mesh!');
 				//fireRef.visible = true;
 				screenshakeOffset = 1;
-				hideItem(ballBox.id);
+				hideItem(ball.id);
 				// prevent multiple triggers
 				if (lastExplosion <= 0) {
 					explosionParticles._AddParticles(currentDelta, spaceShipRef.position);
 					if (sfxExplosion.isPlaying) sfxExplosion.stop();
 					// https://threejs.org/docs/#api/en/audio/PositionalAudio use this!!
 					sfxExplosion.position.copy(spaceShipRef.position);
-					sfxExplosion.play();
 					lastExplosion = 1;
+					// we hit sth: stop the laser
+					sfxLaser.stop();
+					sfxExplosion.play();
 					return;
 				}
 				// play();
@@ -351,7 +334,7 @@
 		const discriminant = b * b - 4 * a * c;
 		return discriminant > 0;
 	}
-	
+
 	const raycaster = new Raycaster();
 	function shootLaser(position) {
 		if (animateLaser) return;
@@ -376,18 +359,12 @@
 			.filter((ball) => ball.visible && ball.pos.x < 0) // only alive balls that are not behind me
 			.sort((a, b) => laserStartPosition.distanceTo(a.pos) - laserStartPosition.distanceTo(b.pos)); // closest first
 
-
 		let hitBall = null;
 
 		// Check for intersections in order of proximity
 		for (const ball of sortedBalls) {
 			if (
-				rayIntersectsSphere(
-					laserStartPosition,
-					laserDirection,
-					ball.pos,
-					ball.scale + LASER_WIDTH
-				)
+				rayIntersectsSphere(laserStartPosition, laserDirection, ball.pos, ball.scale + LASER_WIDTH)
 			) {
 				hitBall = ball;
 				break;

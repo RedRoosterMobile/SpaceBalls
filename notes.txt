@@ -9,6 +9,12 @@ https://kit.svelte.dev/docs/adapter-static
 
 
 
+shooting:
+make sure the laser does not go furter than I can see
+make sure the sphere is big enough to include all the stuff
+ideally the sphere is just as big as I can see (radius, camera.far)
+
+
 
 
 SFX:

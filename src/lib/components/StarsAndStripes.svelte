@@ -95,22 +95,23 @@
 		const color = new Color(colors[Math.floor(Math.random() * colors.length)])
 			.convertSRGBToLinear()
 			.multiplyScalar(1.3);
-		ball.visible = true;
+
 		ball.scale = r(0.5, 1.5);
+		//ball.scale = 1;
 
 		//nebula.pos = new Vector3(r(-15-150, -45 - 150), r(-10.5, 1.5), r(30, -45));
 
 		// back, but random
-		ball.pos = new Vector3(r(-15 - 150, -45 - 150), 0.5 * ball.scale, r(20, -20));
+		ball.pos = new Vector3(r(-200, -255), 0.5 * ball.scale, r(19, -19));
 
 		// all in one line
-		//ball.pos = new Vector3(-45 - 150, 0.5 * ball.scale, -5);
+		//ball.pos = new Vector3(-200, 0.5 * ball.scale, -5);
 
 		ball.color = color;
 		ball.speed = r(0.5, 1.5) * BALL_SPEED_MULT;
-		//ball.speed = r(0.5, 1.5) * 2;
+		//ball.speed = 1;
 		ball.floatSpeed = r(0.5, 1.5);
-
+		ball.visible = true;
 		balls[index] = ball;
 	}
 	createBalls();

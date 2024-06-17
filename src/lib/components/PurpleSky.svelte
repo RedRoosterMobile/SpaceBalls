@@ -64,7 +64,7 @@
 
 		//return <mesh position={position} material={skyMat} geometry={skyGeo} />;
 	}
-	PurpleSky(0x11e8bb, 0x8200c9, 0.5, 1.5, 0.1, [0, 0, 0], 100);
+	PurpleSky(0x11e8bb, 0x8200c9, 0.5, 1.5, 0.1, [0, 0, 0], 256);
 
 	function glitter() {
 		// Vertex Shader
