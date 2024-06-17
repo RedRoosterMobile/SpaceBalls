@@ -197,7 +197,7 @@
 	useRender(({ _, renderer, __ }, delta) => {
 		time += delta;
 		currentDelta = delta;
-		if (animateLaser) laser.position.x = laser.position.x - delta * 500;
+		if (animateLaser) laser.position.x = laser.position.x - delta * 1000;
 		if (intersectionPoint) {
 			// const targetY = intersectionPoint?.y || 0;
 			// translAccelleration += (targetY - translY) * 0.002; // stiffness
@@ -315,8 +315,8 @@
 		const laserMaterial = new MeshPhongMaterial({
 			color: 0x800080,
 			emissive: 0x800080,
-			side: BackSide,
-			emissiveIntensity: 250
+			side: DoubleSide,
+			emissiveIntensity: 55 
 		});
 
 		// Create the laser plane
