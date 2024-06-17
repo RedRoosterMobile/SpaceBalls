@@ -207,7 +207,7 @@
 	let motionBlurStrength = 0;
 	useRender(({ _, renderer, __ }, delta) => {
 		time += delta;
-		
+
 		currentDelta = delta;
 		if (animateLaser) laser.position.x = laser.position.x - delta * 1000;
 		if (intersectionPoint) {
@@ -305,7 +305,7 @@
 				//console.log('Player is overlapping the target mesh!');
 				//fireRef.visible = true;
 				screenshakeOffset = 1;
-				motionBlurStrength=1;
+				motionBlurStrength = 1;
 				hideItem(ball.id);
 				// prevent multiple triggers
 				if (lastExplosion <= 0) {
@@ -517,7 +517,7 @@
 		audioLoader.load('./audio/Explosion.mp3', function (buffer) {
 			sfxExplosion.setBuffer(buffer);
 			sfxExplosion.setLoop(false);
-			sfxExplosion.setVolume(0.5);
+			sfxExplosion.setVolume(0.35);
 		});
 	}
 </script>
