@@ -62,7 +62,10 @@
 	import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 	import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 	import { RGBShiftShader } from 'three/addons/shaders/RGBShiftShader.js';
-	import { DotScreenShader } from 'three/addons/shaders/DotScreenShader.js';
+	//import { DotScreenShader } from 'three/addons/shaders/DotScreenShader.js';
+	import { DotScreenShader } from '../classes/DotScreenShader';
+	import { MotionBlur } from '../classes/MotionBlur';
+
 	import PurpleSky from './PurpleSky.svelte';
 	import { Box3Helper } from 'three';
 	import { itemsStore } from '../store.js';
@@ -166,6 +169,7 @@
 	const composer = new EffectComposer(renderer);
 	composer.setSize(innerWidth, innerHeight);
 
+	let motionBlurFx;
 	const setupEffectComposer = () => {
 		const renderPass = new RenderPass(scene, camera.current);
 		console.log('far', camera.current.far); // outputs: 2000!!!
@@ -174,10 +178,15 @@
 
 		const bloomPass = new UnrealBloomPass(new Vector2(innerWidth, innerHeight), 0.275, 1, 0);
 		composer.addPass(bloomPass);
-
+		//https://raw.githubusercontent.com/mrdoob/three.js/dev/examples/jsm/shaders/DotScreenShader.js
 		// const effect1 = new ShaderPass(DotScreenShader);
+
 		// effect1.uniforms['scale'].value = 4;
 		// composer.addPass(effect1);
+
+		motionBlurFx = new ShaderPass(MotionBlur);
+		motionBlurFx.uniforms['strength'].value = 0.0;
+		composer.addPass(motionBlurFx);
 
 		// cool stuff
 		// https://threejs.org/examples/?q=post#webgl_postprocessing_advanced
@@ -197,6 +206,7 @@
 	let floatSpeed = 3;
 	useRender(({ _, renderer, __ }, delta) => {
 		time += delta;
+		motionBlurFx.uniforms['strength'].value = (Math.sin(time*20) * 0.5 + 0.5)/20;
 		currentDelta = delta;
 		if (animateLaser) laser.position.x = laser.position.x - delta * 1000;
 		if (intersectionPoint) {
