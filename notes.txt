@@ -6,3 +6,17 @@ https://github.com/JavRedstone/IFT-X-V2/blob/main/package.json
 
 To use SvelteKit as a static site generator (SSG), use adapter-static.
 https://kit.svelte.dev/docs/adapter-static
+
+
+
+
+
+SFX:
+laser
+https://freesound.org/people/Valenspire/sounds/337112/
+
+
+explosion
+
+
+die

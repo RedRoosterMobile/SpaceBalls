@@ -1,6 +1,6 @@
 <script>
 	import { T, useRender, useThrelte } from '@threlte/core';
-	import { OrbitControls, Sky, Stars, Grid, AnimatedSpriteMaterial } from '@threlte/extras';
+	import { OrbitControls, Float, Sky, Stars, Grid, AnimatedSpriteMaterial } from '@threlte/extras';
 	import Spaceship from './models/spaceship.svelte';
 	import { ParticleSystemSimon } from '../classes/ParticleSystemSimon';
 	import {
@@ -11,6 +11,7 @@
 		Audio,
 		MeshBasicMaterial,
 		MeshLambertMaterial,
+		MeshPhongMaterial,
 		PMREMGenerator,
 		PlaneGeometry,
 		Raycaster,
@@ -66,12 +67,17 @@
 	import { itemsStore } from '../store.js';
 	import Fire from './Fire.svelte';
 
+	const LASER_WIDTH = 0.5;
+
 	function r(min, max) {
 		let diff = Math.random() * (max - min);
 		return min + diff;
 	}
 
 	const { scene, camera, renderer } = useThrelte();
+	console.log(renderer);
+	renderer.setPixelRatio(Math.min(1.5, window.devicePixelRatio));
+
 	let spaceShipRef;
 	let playerBodyRef;
 	let starsAndStripesRef;
@@ -206,6 +212,7 @@
 
 	let explosionParticles;
 	let currentDelta = 0;
+	let floatSpeed = 3;
 	useRender(({ _, renderer, __ }, delta) => {
 		time += delta;
 		currentDelta = delta;
@@ -263,12 +270,15 @@
 		screenshake();
 		screenshakeOffset = Math.max(screenshakeOffset - delta * 2, 0);
 		lastExplosion = Math.max(lastExplosion - delta, 0);
+		//floatSpeed=Math.max(Math.floor(floatSpeed - delta), 3);
+		//floatSpeed=Math.max(floatSpeed - delta/2, 3);
+		//console.log(floatSpeed);
 		$camera.lookAt(cameraTarget);
 		// billboarding
 		//planeRef.lookAt(camera.current.position);
 		//angleAccelleration *= 0.2;
-		updateBoundingBoxes();
-		checkIntersection();
+		updateSpaceshipBoundingBoxes();
+		checkSpaceshipIntersection();
 
 		if (explosionParticles) {
 			explosionParticles._UpdateParticles(delta);
@@ -277,8 +287,8 @@
 
 		composer.render();
 	});
-	// Function to update the bounding boxes
-	function updateBoundingBoxes() {
+	
+	function updateSpaceshipBoundingBoxes() {
 		spaceShipColliderBox.setFromObject(playerBodyRef);
 	}
 
@@ -290,8 +300,7 @@
 	}
 
 	let lastExplosion = 0;
-	// Function to check for intersection
-	function checkIntersection() {
+	function checkSpaceshipIntersection() {
 		balls.forEach((ballBox) => {
 			if (
 				ballBox.visible &&
@@ -315,14 +324,16 @@
 			}
 		});
 	}
-	let laserDuration = 300; // Duration in milliseconds
+	let laserDuration = 350; // Duration in milliseconds
 	let laser;
 	function initLaser() {
 		// Create the laser geometry and material
-		const laserGeometry = new PlaneGeometry(0.5, 10); // Width, Length of the laser
-		const laserMaterial = new MeshBasicMaterial({
+		const laserGeometry = new PlaneGeometry(LASER_WIDTH, 10); // Width, Length of the laser
+		const laserMaterial = new MeshPhongMaterial({
 			color: 0x800080,
-			side: BackSide
+			emissive: 0x800080,
+			side: BackSide,
+			emissiveIntensity: 250
 		});
 
 		// Create the laser plane
@@ -331,6 +342,7 @@
 		laser.visible = false; // Initially hidden
 		scene.add(laser);
 	}
+
 	function rayIntersectsSphere(rayOrigin, rayDirection, sphereCenter, sphereRadius) {
 		const oc = rayOrigin.clone().sub(sphereCenter);
 		const a = rayDirection.dot(rayDirection);
@@ -339,6 +351,7 @@
 		const discriminant = b * b - 4 * a * c;
 		return discriminant > 0;
 	}
+	
 	const raycaster = new Raycaster();
 	function shootLaser(position) {
 		if (animateLaser) return;
@@ -357,16 +370,25 @@
 
 		raycaster.set(laserStartPosition, laserDirection);
 
+		// make sure only the ones in front (x) and not left or right get blasted
 		const sortedBalls = balls
 			.slice() // keep original order
-			.filter((ball) => ball.visible) // only alive balls
+			.filter((ball) => ball.visible && ball.pos.x < 0) // only alive balls that are not behind me
 			.sort((a, b) => laserStartPosition.distanceTo(a.pos) - laserStartPosition.distanceTo(b.pos)); // closest first
+
 
 		let hitBall = null;
 
 		// Check for intersections in order of proximity
 		for (const ball of sortedBalls) {
-			if (rayIntersectsSphere(laserStartPosition, laserDirection, ball.pos, ball.scale)) {
+			if (
+				rayIntersectsSphere(
+					laserStartPosition,
+					laserDirection,
+					ball.pos,
+					ball.scale + LASER_WIDTH
+				)
+			) {
 				hitBall = ball;
 				break;
 			}
@@ -389,6 +411,7 @@
 		if (sfxExplosion.isPlaying) sfxExplosion.stop();
 		sfxExplosion.position.copy(ball.pos);
 		sfxExplosion.play();
+		floatSpeed = 6;
 	}
 
 	onMount(() => {
@@ -511,12 +534,13 @@
 	<T.MeshBasicMaterial side={DoubleSide} color={[1, 0, 1]} transparent opacity={0.25} />
 </T.Mesh> -->
 <!-- rotation={[angleZ, 0, angleZ, 'ZXY']} -->
-
-<Spaceship
-	bind:ref={spaceShipRef}
-	position={[0, 0, translZ]}
-	rotation={[-angleY, angleY * 0.1, 0, 'ZXY']}
-/>
+<Float speed={floatSpeed} floatingRange={[-0.5, 0.5]} rotationIntensity={0.01} rotationSpeed={50}>
+	<Spaceship
+		bind:ref={spaceShipRef}
+		position={[0, 0, translZ]}
+		rotation={[-angleY, angleY * 0.1, 0, 'ZXY']}
+	/>
+</Float>
 
 <T.Mesh
 	bind:ref={playerBodyRef}

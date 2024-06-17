@@ -26,7 +26,7 @@ Title: Rusty Spaceship - Orange
 	let afterBurnerScaleY = 1;
 	let time = 0;
 
-	const gltf = useGltf('/models/spaceship.glb');
+	const gltf = useGltf('./models/spaceship.glb');
 	const map = useTexture('textures/energy-beam-opacity.png');
 
 	gltf.then((model) => {

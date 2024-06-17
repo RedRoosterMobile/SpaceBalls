@@ -147,7 +147,6 @@ void main()
     col *= 0.01;
 
     // Make the red component blink over time
-    // Make the red component blink over time
     col.r *= abs(sin(iTime * 3.0)*0.5+0.5)*5.; // Adjust the frequency as needed
     gl_FragColor = vec4( col, .01 );
 }

@@ -1,11 +1,20 @@
 <script>
 	import { T, useFrame, forwardEventHandlers } from '@threlte/core';
 	import { Float, Instance, InstancedMesh, useTexture, Billboard } from '@threlte/extras';
-	import { Color, DoubleSide, BackSide, FrontSide, Vector3, Group } from 'three';
+	import {
+		Color,
+		DoubleSide,
+		BackSide,
+		FrontSide,
+		Vector3,
+		Group,
+		RGB_PVRTC_2BPPV1_Format
+	} from 'three';
 	import { onDestroy, onMount } from 'svelte';
 	import { itemsStore } from '../store.js';
 
 	let BALLS_COUNT = 10;
+	let BALL_SPEED_MULT = 5;
 	let balls = [];
 
 	// Subscribe to the store to get the initial value and updates
@@ -19,12 +28,10 @@
 	});
 
 	let STARS_COUNT = 350;
-	let BALL_SPEED_MULT = 5;
-	// let BALL_SPEED_MULT = 0.5;
 	let colors = ['#fcaa67', '#C75D59', '#ffffc7', '#8CC5C6', '#A5898C'];
 	let stars = [];
 
-	let phase = 0;
+	let time = 0;
 
 	//let getCollidingObjects = $$restProps.getCollidingObjects;
 
@@ -94,13 +101,14 @@
 		//nebula.pos = new Vector3(r(-15-150, -45 - 150), r(-10.5, 1.5), r(30, -45));
 
 		// back, but random
-		ball.pos = new Vector3(r(-15 - 150, -45 - 150), 0.5 * ball.scale, r(30, -45));
+		ball.pos = new Vector3(r(-15 - 150, -45 - 150), 0.5 * ball.scale, r(20, -20));
 
 		// all in one line
-		// ball.pos = new Vector3(-45 - 150, 0.5 * ball.scale, 0);
+		//ball.pos = new Vector3(-45 - 150, 0.5 * ball.scale, -5);
 
 		ball.color = color;
 		ball.speed = r(0.5, 1.5) * BALL_SPEED_MULT;
+		//ball.speed = r(0.5, 1.5) * 2;
 		ball.floatSpeed = r(0.5, 1.5);
 
 		balls[index] = ball;
@@ -112,7 +120,7 @@
 	});
 
 	useFrame((_, delta) => {
-		phase += delta;
+		time += delta;
 		stars.forEach((star) => {
 			star.pos.x += star.speed * delta;
 			if (star.pos.x > 40) resetStar(star);
