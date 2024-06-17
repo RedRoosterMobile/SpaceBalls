@@ -2,7 +2,8 @@
 	import { T, useRender, useThrelte } from '@threlte/core';
 	import { OrbitControls, Float, Sky, Stars, Grid, AnimatedSpriteMaterial } from '@threlte/extras';
 	import Spaceship from './models/spaceship.svelte';
-	import { ParticleSystemSimon } from '../classes/ParticleSystemSimon';
+
+	import { GeneralParticleSystemSimon } from '../classes/GeneralParticleSystemSimon';
 	import {
 		Color,
 		Mesh,
@@ -293,7 +294,7 @@
 				hideItem(ball.id);
 				// prevent multiple triggers
 				if (lastExplosion <= 0) {
-					explosionParticles._AddParticles(currentDelta, spaceShipRef.position);
+					explosionParticles._AddParticles(currentDelta, spaceShipRef.position, ball.color);
 					if (sfxExplosion.isPlaying) sfxExplosion.stop();
 					// https://threejs.org/docs/#api/en/audio/PositionalAudio use this!!
 					sfxExplosion.position.copy(spaceShipRef.position);
@@ -316,7 +317,7 @@
 			color: 0x800080,
 			emissive: 0x800080,
 			side: DoubleSide,
-			emissiveIntensity: 55 
+			emissiveIntensity: 55
 		});
 
 		// Create the laser plane
@@ -384,7 +385,13 @@
 	function handleHit(ball) {
 		hideItem(ball.id);
 		screenshakeOffset = 0.1;
-		explosionParticles._AddParticles(currentDelta, ball.pos);
+
+		explosionParticles._AddParticles(
+			currentDelta,
+			ball.pos,
+			ball.color,
+			new Vector3(r(-1, 1), r(-1, 1), r(-1, 1))
+		);
 		if (sfxExplosion.isPlaying) sfxExplosion.stop();
 		sfxExplosion.position.copy(ball.pos);
 		sfxExplosion.play();
@@ -447,7 +454,7 @@
 		// console.log(system);
 		const params = { parent: scene, camera: camera.current };
 		//console.log(params);
-		explosionParticles = new ParticleSystemSimon(params);
+		explosionParticles = new GeneralParticleSystemSimon(params);
 		initLaser();
 		loadSounds();
 

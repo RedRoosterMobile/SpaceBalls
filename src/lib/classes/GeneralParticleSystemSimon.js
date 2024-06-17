@@ -3,6 +3,7 @@ import * as THREE from 'three';
 const _VS = `
 uniform float pointMultiplier;
 
+
 attribute float size;
 attribute float angle;
 attribute vec4 colour;
@@ -27,9 +28,13 @@ uniform sampler2D diffuseTexture;
 varying vec4 vColour;
 varying vec2 vAngle;
 
+uniform vec3 tint;
+
 void main() {
   vec2 coords = (gl_PointCoord - 0.5) * mat2(vAngle.x, vAngle.y, -vAngle.y, vAngle.x) + 0.5;
-  gl_FragColor = texture2D(diffuseTexture, coords) * vColour;
+  //gl_FragColor = texture2D(diffuseTexture, coords) * vColour;
+  gl_FragColor = texture2D(diffuseTexture, coords) * vColour * vec4(vec3(tint.r,tint.g,tint.b),1.);
+  
 }`;
 class LinearSpline {
 	constructor(lerp) {
@@ -76,6 +81,9 @@ export class GeneralParticleSystemSimon {
 			},
 			pointMultiplier: {
 				value: window.innerHeight / (2.0 * Math.tan((0.5 * 60.0 * Math.PI) / 180.0))
+			},
+			tint: {
+				value: new THREE.Color(1, 1, 1) // No-Op color
 			}
 		};
 
@@ -143,21 +151,27 @@ export class GeneralParticleSystemSimon {
 	// - velocity OK
 	// - life
 	// - amount
-	// - color?
+	// - tint OK
 
 	/**
 	 *
 	 * @param {number} timeElapsed aka delta
 	 * @param {THREE.Vector3} spawnPosition
+   * @param {THREE.Vector3} tint
 	 * @param {THREE.Vector3} velocity
 	 */
-	_AddParticles(timeElapsed, spawnPosition, velocity) {
+	_AddParticles(timeElapsed, spawnPosition, tint, velocity) {
 		if (!this.gdfsghk) {
 			this.gdfsghk = 0.0;
 		}
-		if (!this.velocity) {
+		if (!velocity) {
 			velocity = new THREE.Vector3(0, 0, 0);
 		}
+
+		if (!tint) {
+			tint = new THREE.Color(0xffffff);
+		}
+
 		this.gdfsghk += timeElapsed * 30;
 		const n = Math.floor(this.gdfsghk * 75.0);
 		this.gdfsghk -= n / 75.0;
@@ -171,14 +185,14 @@ export class GeneralParticleSystemSimon {
 					spawnPosition.z + (Math.random() * 2 - 1) * 1.0
 				),
 				size: (Math.random() * 0.5 + 0.5) * 4.0,
-				// prevent color spline thing to tint
 				colour: new THREE.Color(),
+				tint: tint,
 				alpha: 1.0,
 				life: life,
 				maxLife: life,
 				rotationSpeed: Math.random() + 1,
 				rotation: Math.random() * 2.0 * Math.PI,
-				velocity: new THREE.Vector3(0, 0, 0) + velocity
+				velocity: new THREE.Vector3(0, 0, 0).add(velocity)
 			});
 		}
 	}
@@ -191,7 +205,8 @@ export class GeneralParticleSystemSimon {
 
 		for (let p of this._particles) {
 			positions.push(p.position.x, p.position.y, p.position.z);
-			colours.push(p.colour.r, p.colour.g, p.colour.b, p.alpha);
+			let tintedColor = p.colour.clone().multiply(p.tint);
+			colours.push(tintedColor.r, tintedColor.g, tintedColor.b, p.alpha);
 			sizes.push(p.currentSize);
 			angles.push(p.rotation);
 		}
@@ -234,7 +249,6 @@ export class GeneralParticleSystemSimon {
 			drag.z = Math.sign(p.velocity.z) * Math.min(Math.abs(drag.z), Math.abs(p.velocity.z));
 			p.velocity.sub(drag);
 		}
-		// console.log(this._particles);
 
 		this._particles.sort((a, b) => {
 			const d1 = this._camera.position.distanceTo(a.position);
