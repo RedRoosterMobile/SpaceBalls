@@ -204,9 +204,10 @@
 	let explosionParticles;
 	let currentDelta = 0;
 	let floatSpeed = 3;
+	let motionBlurStrength = 0;
 	useRender(({ _, renderer, __ }, delta) => {
 		time += delta;
-		motionBlurFx.uniforms['strength'].value = (Math.sin(time*20) * 0.5 + 0.5)/20;
+		
 		currentDelta = delta;
 		if (animateLaser) laser.position.x = laser.position.x - delta * 1000;
 		if (intersectionPoint) {
@@ -262,8 +263,11 @@
 		screenshake();
 		screenshakeOffset = Math.max(screenshakeOffset - delta * 2, 0);
 		lastExplosion = Math.max(lastExplosion - delta, 0);
+		motionBlurStrength = Math.max(motionBlurStrength - delta, 0);
 		//floatSpeed=Math.max(Math.floor(floatSpeed - delta), 3);
 		//floatSpeed=Math.max(floatSpeed - delta/2, 3);
+		// motionBlurStrength = (Math.sin(time * 20) * 0.5 + 0.5) / 10;
+		motionBlurFx.uniforms['strength'].value = motionBlurStrength;
 		//console.log(floatSpeed);
 		$camera.lookAt(cameraTarget);
 		// billboarding
@@ -301,6 +305,7 @@
 				//console.log('Player is overlapping the target mesh!');
 				//fireRef.visible = true;
 				screenshakeOffset = 1;
+				motionBlurStrength=1;
 				hideItem(ball.id);
 				// prevent multiple triggers
 				if (lastExplosion <= 0) {
@@ -395,6 +400,7 @@
 	function handleHit(ball) {
 		hideItem(ball.id);
 		screenshakeOffset = 0.1;
+		motionBlurStrength = 0.1;
 
 		explosionParticles._AddParticles(
 			currentDelta,
