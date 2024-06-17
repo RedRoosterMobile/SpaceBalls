@@ -170,6 +170,7 @@
 	composer.setSize(innerWidth, innerHeight);
 
 	let motionBlurFx;
+	let rgbShiftFx;
 	const setupEffectComposer = () => {
 		const renderPass = new RenderPass(scene, camera.current);
 		console.log('far', camera.current.far); // outputs: 2000!!!
@@ -191,9 +192,9 @@
 		// cool stuff
 		// https://threejs.org/examples/?q=post#webgl_postprocessing_advanced
 
-		// const effect2 = new ShaderPass(RGBShiftShader);
-		// effect2.uniforms['amount'].value = 0.0015;
-		// composer.addPass(effect2);
+		rgbShiftFx = new ShaderPass(RGBShiftShader);
+		rgbShiftFx.uniforms['amount'].value = 0.0015;
+		composer.addPass(rgbShiftFx);
 
 		const outputPass = new OutputPass();
 		composer.addPass(outputPass);
@@ -268,6 +269,10 @@
 		//floatSpeed=Math.max(floatSpeed - delta/2, 3);
 		// motionBlurStrength = (Math.sin(time * 20) * 0.5 + 0.5) / 10;
 		motionBlurFx.uniforms['strength'].value = motionBlurStrength;
+
+		//rgbShiftFx.uniforms['amount'].value = 0.0015;
+		const zto = Math.sin(time*4) * 0.5 + 0.5;
+		rgbShiftFx.uniforms['amount'].value = zto * 0.0015;
 		//console.log(floatSpeed);
 		$camera.lookAt(cameraTarget);
 		// billboarding
