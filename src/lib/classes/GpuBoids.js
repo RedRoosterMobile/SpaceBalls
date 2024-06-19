@@ -94,6 +94,7 @@ const fragmentShaderVelocity = `
 				dist = length( dir );
 				distSquared = dist * dist;
 
+        // was 150!!!
 				float preyRadius = 150.0;
 				float preyRadiusSq = preyRadius * preyRadius;
 
@@ -180,8 +181,8 @@ const fragmentShaderVelocity = `
 				if ( length( velocity ) > limit ) {
 					velocity = normalize( velocity ) * limit;
 				}
-
-				gl_FragColor = vec4( velocity, 1.0 );
+        float speed=1.; // was 1
+				gl_FragColor = vec4( velocity * speed, 1.0 );
 
 			}
 	`;
@@ -245,7 +246,7 @@ const birdVS = `
 
 				z = newPosition.z;
 
-				vColor = vec4( birdColor, 1.0 );
+				vColor = vec4( birdColor*0.5, 1.0 );
 				gl_Position = projectionMatrix *  viewMatrix  * vec4( newPosition, 1.0 );
 			}
 	`;
@@ -312,7 +313,7 @@ function initComputeRenderer(_renderer) {
 	velocityUniforms['separationDistance'] = { value: 1.0 };
 	velocityUniforms['alignmentDistance'] = { value: 1.0 };
 	velocityUniforms['cohesionDistance'] = { value: 1.0 };
-	velocityUniforms['freedomFactor'] = { value: 1.0 };
+	velocityUniforms['freedomFactor'] = { value: 0.5 };
 	velocityUniforms['predator'] = { value: new THREE.Vector3() };
 	velocityVariable.material.defines.BOUNDS = BOUNDS.toFixed(2);
 
@@ -335,8 +336,8 @@ function initBirds(scene) {
 	birdUniforms = {
 		//color: { value: new THREE.Color(0xff2200) },
 		//ffffc7
-		birdColor: { value: new THREE.Color(0xc0000ff) },
-		color: { value: new THREE.Color(0xc0000ff) },
+		birdColor: { value: new THREE.Color(0x0000ff) },
+		color: { value: new THREE.Color(0x00ff00) },
 		texturePosition: { value: null },
 		textureVelocity: { value: null },
 		time: { value: 1.0 },
@@ -359,7 +360,6 @@ function initBirds(scene) {
 	birdMesh.rotation.y = Math.PI / 2;
 	birdMesh.matrixAutoUpdate = false;
 	birdMesh.updateMatrix();
-
 	scene.add(birdMesh);
 }
 
@@ -422,9 +422,15 @@ function render(delta) {
 
 let time = 0;
 export class GpuBoids {
+	/**
+	 *
+	 * @param {GPUComputationRenderer} renderer
+	 * @param {THREE.Scene} scene
+	 */
 	constructor(renderer, scene) {
 		initt(renderer, scene);
 	}
+
 	update(delta) {
 		time += delta;
 		render(delta);

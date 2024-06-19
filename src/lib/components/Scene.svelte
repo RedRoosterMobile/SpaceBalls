@@ -84,6 +84,7 @@
 	import Fire from './Fire.svelte';
 	import Boids from './Boids.svelte';
 	import { GpuBoids, WIDTH } from '../classes/GpuBoids';
+	import FallingParticles from './FallingParticles.svelte';
 
 	const LASER_WIDTH = 0.5;
 
@@ -96,11 +97,8 @@
 	console.log(renderer);
 	renderer.setPixelRatio(Math.min(1.5, window.devicePixelRatio));
 
-	console.log(renderer);
 
-	//boids = new GpuBoids(renderer);
-	const gpuCompute = new GPUComputationRenderer(WIDTH, WIDTH, renderer);
-	const boids = new GpuBoids(gpuCompute, scene);
+	
 
 	let spaceShipRef;
 	let playerBodyRef;
@@ -254,6 +252,7 @@
 	let currentDelta = 0;
 	let floatSpeed = 3;
 	let motionBlurStrength = 0;
+	let timeToRenderBird = 0;
 	useRender(({ _, renderer, __ }, delta) => {
 		time += delta;
 
@@ -334,7 +333,11 @@
 			explosionParticles._UpdateGeometry();
 		}
 
-		boids && boids.update(delta);
+		timeToRenderBird -= delta;
+		if (timeToRenderBird <= 0) {
+			boids && boids.update(delta);
+			timeToRenderBird = 0.024;
+		}
 
 		composer.render();
 	});
@@ -469,8 +472,10 @@
 		floatSpeed = 6;
 	}
 
+  let boids;
 	onMount(() => {
 		setupEffectComposer();
+    boids = new GpuBoids(new GPUComputationRenderer(WIDTH, WIDTH, renderer), scene);
 
 		const planeGeo = new PlaneGeometry(40, 40);
 		const planeMat = new MeshBasicMaterial({
@@ -628,3 +633,4 @@
 
 <!-- shitty boids - can't scale 'em properly, too many draw calls -->
 <!-- <Boids position={[0, 0, 0]}/> -->
+<FallingParticles/>
