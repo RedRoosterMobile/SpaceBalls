@@ -8,6 +8,7 @@
 		FrontSide,
 		Vector3,
 		Group,
+		
 		RGB_PVRTC_2BPPV1_Format
 	} from 'three';
 	import { onDestroy, onMount } from 'svelte';
@@ -159,7 +160,8 @@
 	{#await map then value}
 		<InstancedMesh limit={STARS_COUNT} range={STARS_COUNT}>
 			<T.PlaneGeometry args={[1, 0.05]} />
-			<T.MeshBasicMaterial side={DoubleSide} alphaMap={value} transparent />
+			<!--alphaMap={value} alphaTest={0.5}-->
+			<T.MeshBasicMaterial side={DoubleSide} transparent alphaMap={value}  />
 
 			{#each stars as star}
 				<Instance
@@ -175,7 +177,6 @@
 		<InstancedMesh limit={BALLS_COUNT} range={BALLS_COUNT}>
 			<T.SphereGeometry args={[1, 32, 32]} />
 
-			<!--alphaMap={value} transparent-->
 			<T.MeshBasicMaterial />
 			{#each balls as ball}
 				{#if ball.visible}

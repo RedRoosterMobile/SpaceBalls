@@ -85,6 +85,7 @@
 	import Boids from './Boids.svelte';
 	import { GpuBoids, WIDTH } from '../classes/GpuBoids';
 	import FallingParticles from './FallingParticles.svelte';
+	import FallingParticlesInstanced from './FallingParticlesInstanced.svelte';
 
 	const LASER_WIDTH = 0.5;
 
@@ -481,8 +482,8 @@
 		const planeMat = new MeshBasicMaterial({
 			color: 0xff0000,
 			side: DoubleSide, // Double-sided
-			transparent: true, // Enable transparency
-			opacity: 0.25 // Set opacity level (0.0 to 1.0)}); // 0xff0000 is the hexadecimal value for red
+			// transparent: true, // Enable transparency
+			// opacity: 0.25 // Set opacity level (0.0 to 1.0)}); // 0xff0000 is the hexadecimal value for red
 		});
 		const mesh = new Mesh(planeGeo, planeMat);
 		mesh.rotation.x = -Math.PI / 2; // Rotate 90 degrees
@@ -634,3 +635,4 @@
 <!-- shitty boids - can't scale 'em properly, too many draw calls -->
 <!-- <Boids position={[0, 0, 0]}/> -->
 <FallingParticles/>
+<!-- <FallingParticlesInstanced/> -->

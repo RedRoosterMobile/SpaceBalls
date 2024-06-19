@@ -2,19 +2,22 @@
 interesting stuff all over the place, like particles
 https://github.com/JavRedstone/IFT-X-V2/blob/main/package.json
 
-
-
 To use SvelteKit as a static site generator (SSG), use adapter-static.
 https://kit.svelte.dev/docs/adapter-static
 
+
+references:
+star fox
+https://www.youtube.com/watch?v=ZnmnpWKoUS0
+final fantasy
+https://www.youtube.com/watch?v=QA789JzHU_0
+https://www.ign.com/wikis/final-fantasy-7-rebirth/Galactic_Saviors
 
 
 shooting:
 make sure the laser does not go furter than I can see
 make sure the sphere is big enough to include all the stuff
 ideally the sphere is just as big as I can see (radius, camera.far)
-
-
 
 
 SFX:

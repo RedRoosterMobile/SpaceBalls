@@ -16,71 +16,89 @@
 	const { scene } = useThrelte();
 
 	const offsetPosition = new Vector3(-100 / 2, 0, -150 / 2 / 2);
-	const planes = [];
-	// animate this when instanced!! like an effect
-	const LEAVES_COUNT = 100; // was 100
+	const LEAVES_COUNT = 100;
+	let startX=0;
 	const rand = Math.random;
 	const planeMat = new MeshPhongMaterial({
-		//color: 0xffffff * 0.4,
 		color: 0xff0080,
 		shininess: 0.5,
 		specular: 0xff0080,
 		emissive: 0x800080,
 		emissiveIntensity: 10.5,
-
 		side: DoubleSide,
 		forceSinglePass: true
 	});
 	const planePiece = new PlaneGeometry(2.5, 5, 1, 1);
 	const scale = 1;
-	let startX = 0;
 
-	//const instancedMesh = new InstancedMesh(planePiece, planeMat, LEAVES_COUNT);
+	const instancedMesh = new InstancedMesh(planePiece, planeMat, LEAVES_COUNT);
 	const dummy = new Object3D();
+
+	const rotations = [];
+	const positions = [];
+	const velocities = [];
+
 	for (let i = 0; i < LEAVES_COUNT; i++) {
-		const plane = new Mesh(planePiece, planeMat);
-		plane.rotation.set(r(-1, 1), r(-1, 1), r(-1, 1));
+		const rotation = {
+			x: r(-1, 1),
+			y: r(-1, 1),
+			z: r(-1, 1),
+			dx: rand() * 0.1,
+			dy: rand() * 0.1,
+			dz: rand() * 0.1
+		};
+		rotations.push(rotation);
 
-		// crank rotation x to make it a star
-		// do like src/lib/components/StarsAndStripes.svelte with the intances
-		plane.rotation.dx = rand() * 0.1;
-		plane.rotation.dy = rand() * 0.1;
-		plane.rotation.dz = rand() * 0.1;
+		const position = {
+			x: ((rand() * 10) / 2) * scale,
+			y: 0 + rand() * 30 * scale,
+			z: ((rand() * 150) / 2) * scale,
+			dx: rand() - 0.05,
+			dz: rand() - 0.05
+		};
+		position.x += offsetPosition.x;
+		position.z += offsetPosition.z;
+		positions.push(position);
 
-		plane.position.set(
-			((rand() * 10) / 2) * scale, // was 100
-			0 + rand() * 30 * scale,
-			((rand() * 150) / 2) * scale
-		);
-		startX = plane.position.x;
-		plane.position.add(offsetPosition);
-		plane.position.dx = rand() - 0.05;
-		plane.position.dz = rand() - 0.05;
-		// size of particles
-		plane.scale.multiplyScalar(rand() * 0.25);
-		scene.add(plane);
-		planes.push(plane);
+		const velocity = { x: rand() - 0.05, y: -(rand() * 0.1), z: rand() - 0.05 };
+		velocities.push(velocity);
+
+		dummy.position.set(position.x, position.y, position.z);
+		dummy.rotation.set(rotation.x, rotation.y, rotation.z);
+		dummy.scale.setScalar(rand() * 0.25);
+
+		dummy.updateMatrix();
+		instancedMesh.setMatrixAt(i, dummy.matrix);
 	}
+	scene.add(instancedMesh);
 
 	let time = 0;
 
 	function updateInstance(index, delta) {
-		const plane = planes[index];
-		// this need to be positioned over the player or sth.
-		plane.rotation.x += plane.rotation.dx;
-		plane.rotation.y += plane.rotation.dy;
-		plane.rotation.z += plane.rotation.dz;
-		plane.position.y -= delta * 10;
-		//plane.position.y = 0.0;
-		plane.position.x += plane.position.dx;
-		//plane.position.z += plane.position.dz;
+		const rotation = rotations[index];
+		const position = positions[index];
+		const velocity = velocities[index];
 
-		if (plane.position.y < -25) {
-			plane.position.y += 25 * 1.5;
+		rotation.x += rotation.dx;
+		rotation.y += rotation.dy;
+		rotation.z += rotation.dz;
+		position.y += velocity.y * delta * 10;
+		position.x += velocity.x * delta * 10;
+		position.z += velocity.z * delta * 10;
+
+		if (position.y < -25) {
+			position.y += 25 * 1.5;
 		}
-		if (plane.position.x > 1) {
-			plane.position.x = startX - 100;
+		if (position.x > 1) {
+			position.x = startX - 100;
 		}
+
+		dummy.position.set(position.x, position.y, position.z);
+		dummy.rotation.set(rotation.x, rotation.y, rotation.z);
+
+		dummy.updateMatrix();
+		instancedMesh.setMatrixAt(index, dummy.matrix);
+		instancedMesh.instanceMatrix.needsUpdate = true;
 	}
 
 	useTask((delta) => {
