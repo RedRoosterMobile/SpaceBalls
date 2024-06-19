@@ -265,8 +265,8 @@ const birdFS = `
 			}
 	`;
 
-let mouseX = 0,
-	mouseY = 0;
+let mouseX = 100,
+	mouseY = 100;
 
 // let windowHalfX = window.innerWidth / 2;
 // let windowHalfY = window.innerHeight / 2;
