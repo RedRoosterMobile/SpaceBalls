@@ -172,6 +172,9 @@ export class GeneralParticleSystemSimon {
 			tint = new THREE.Color(0xffffff);
 		}
 
+		//const PARTICLE_SIZE= 4.0;
+		const PARTICLE_SIZE= 7.5;
+
 		this.gdfsghk += timeElapsed * 30;
 		const n = Math.floor(this.gdfsghk * 75.0);
 		this.gdfsghk -= n / 75.0;
@@ -184,7 +187,7 @@ export class GeneralParticleSystemSimon {
 					spawnPosition.y + (Math.random() * 2 - 1) * 1.0,
 					spawnPosition.z + (Math.random() * 2 - 1) * 1.0
 				),
-				size: (Math.random() * 0.5 + 0.5) * 4.0,
+				size: (Math.random() * 0.5 + 0.5) * PARTICLE_SIZE,
 				colour: new THREE.Color(),
 				tint: tint,
 				alpha: 1.0,

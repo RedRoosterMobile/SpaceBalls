@@ -16,7 +16,8 @@
 	const { scene } = useThrelte();
 
 	const offsetPosition = new Vector3(-100 / 2, 0, -150 / 2 / 2);
-	const LEAVES_COUNT = 100;
+	// crankable without major caveats!!!
+	const LEAVES_COUNT = 50;
 	let startX=0;
 	const rand = Math.random;
 	const planeMat = new MeshPhongMaterial({
@@ -82,9 +83,10 @@
 		rotation.x += rotation.dx;
 		rotation.y += rotation.dy;
 		rotation.z += rotation.dz;
-		position.y += velocity.y * delta * 10;
-		position.x += velocity.x * delta * 10;
-		position.z += velocity.z * delta * 10;
+		position.y += velocity.y * delta * 100;
+		position.x += velocity.x * delta * 100;
+		// debatable, more like snow
+		// position.z += velocity.z * delta * r(-1,1);
 
 		if (position.y < -25) {
 			position.y += 25 * 1.5;
@@ -98,13 +100,13 @@
 
 		dummy.updateMatrix();
 		instancedMesh.setMatrixAt(index, dummy.matrix);
-		instancedMesh.instanceMatrix.needsUpdate = true;
 	}
 
 	useTask((delta) => {
 		time += delta;
 		for (let i = 0; i < LEAVES_COUNT; i++) {
 			updateInstance(i, delta);
+			instancedMesh.instanceMatrix.needsUpdate = true;
 		}
 	});
 </script>

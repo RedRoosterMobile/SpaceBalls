@@ -634,5 +634,5 @@
 
 <!-- shitty boids - can't scale 'em properly, too many draw calls -->
 <!-- <Boids position={[0, 0, 0]}/> -->
-<FallingParticles/>
-<!-- <FallingParticlesInstanced/> -->
+<!-- <FallingParticles/> -->
+<FallingParticlesInstanced/>
