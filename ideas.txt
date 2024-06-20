@@ -1,0 +1,12 @@
+Have the Synthwave thing shader in the background on a plane
+adjust the field of view
+make tile change color with music
+and other music stuff already build in
+
+make enemies go down in a line, but have some z movement in there as offset
+jitter, swaps, whatever
+make a map of the movements, build an editor? string based? matrix?
+
+FIX camera
+
+add the same game, adjust the fov to match

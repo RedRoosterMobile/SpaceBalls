@@ -8,7 +8,6 @@
 		FrontSide,
 		Vector3,
 		Group,
-		
 		RGB_PVRTC_2BPPV1_Format
 	} from 'three';
 	import { onDestroy, onMount } from 'svelte';
@@ -55,6 +54,7 @@
 		star.color = new Color(colors[Math.floor(Math.random() * colors.length)])
 			.convertSRGBToLinear()
 			.multiplyScalar(1.3);
+		//star.offset = sin(time);
 
 		return star;
 	}
@@ -84,7 +84,8 @@
 				color,
 				scale: r(0.5, 1.5),
 				speed: r(0.5, 1.5) * BALL_SPEED_MULT,
-				floatSpeed: r(0.5, 1.5)
+				floatSpeed: r(0.5, 1.5),
+				offset: 0
 			});
 		}
 	}
@@ -108,6 +109,9 @@
 		ball.speed = r(0.5, 1.5) * BALL_SPEED_MULT;
 		//ball.speed = 1;
 		ball.floatSpeed = r(0.5, 1.5);
+		// bs
+		// console.log(ball.color);
+		// ball.offset = Math.sin(time) * 5;
 		ball.visible = true;
 		balls[index] = ball;
 	}
@@ -125,12 +129,15 @@
 		});
 		stars = stars;
 		let index = 0;
+		let rng = 0;
 		balls.forEach((ball) => {
 			ball.pos.x += ball.speed * 10 * delta;
 			if (ball.pos.x > 40) {
 				resetBall(ball, index);
 				index++;
 			}
+			ball.pos.z += Math.sin(time) * 0.02 * ball.color.r * rng;
+			rng++;
 		});
 		balls = balls;
 
@@ -157,7 +164,7 @@
 		<InstancedMesh limit={STARS_COUNT} range={STARS_COUNT}>
 			<T.PlaneGeometry args={[1, 0.05]} />
 			<!--alphaMap={value} alphaTest={0.5}-->
-			<T.MeshBasicMaterial side={DoubleSide} transparent alphaMap={value}  />
+			<T.MeshBasicMaterial side={DoubleSide} transparent alphaMap={value} />
 
 			{#each stars as star}
 				<Instance

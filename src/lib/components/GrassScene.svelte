@@ -1,13 +1,8 @@
 <script>
 	import * as THREE from 'three';
-	import { T, useRender, useThrelte, useTask } from '@threlte/core';
-	import { OrbitControls, Float, Sky, Stars, Grid, AnimatedSpriteMaterial } from '@threlte/extras';
+	import { T, useThrelte, useTask } from '@threlte/core';
+	import { OrbitControls } from '@threlte/extras';
 	import { SimonDevGLSLCourse } from '../classes/SimonDevGLSLCourse';
-	import { r } from '../helpers';
-
-	import PurpleSky from './PurpleSky.svelte';
-
-	const LASER_WIDTH = 0.5;
 
 	const { scene, camera, renderer } = useThrelte();
 	renderer.setPixelRatio(Math.min(1.5, window.devicePixelRatio));
@@ -29,5 +24,3 @@
 </T.PerspectiveCamera>
 
 <T.DirectionalLight intensity={1.8} position={[0, 10, 0]} castShadow shadow.bias={-0.0001} />
-
-<!-- <PurpleSky /> -->
