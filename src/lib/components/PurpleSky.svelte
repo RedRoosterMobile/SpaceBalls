@@ -1,4 +1,55 @@
 <script>
+	const moireFs = `
+// todo: convert to glsl
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+// calculate screen coordinates
+vec2 uv = fragCoord.xy / iResolution.xy;
+uv -= 0.5;
+uv.x *= iResolution.x / iResolution.y;
+
+// calculate rotation
+float angle = iTime * .1; // rotation angle changes over time
+mat2 rot = mat2(cos(angle), -sin(angle), sin(angle), cos(angle)); // rotation matrix
+uv *= rot; // apply rotation
+
+// calculate moire pattern
+vec2 moire = vec2(length(uv), atan(uv.x, uv.y));
+
+// calculate fractal geometry
+float fractal = 0.0;
+for(int i = 5; i < 70; i++)
+{
+    fractal += .25 * abs(sin(moire.x * 10.0 - iTime));
+}
+
+// calculate psychedelic colors
+vec3 color = vec3(0.0, 0.0, 0.0);
+color += vec3(1.0, 0.0382, 0.0) * sin(moire.y * 12.0 + fractal);
+color += vec3(0.0, 1.0, 0.0382) * cos(moire.x * 24.0 + fractal);
+color += vec3(0.0382, 0.0, 1.0) * sin(moire.y * 48.0 + fractal);
+
+// output final color
+fragColor = vec4(color, 1.0);
+}
+`;
+
+	const gradientFs = `
+        uniform vec3 topColor;
+        uniform vec3 bottomColor;
+        uniform float offset;
+        uniform float exponent;
+        uniform float brightness;
+
+        varying vec3 vWorldPosition;
+
+        void main() {
+            float h = normalize( vWorldPosition ).y + offset;
+            gl_FragColor = vec4( mix( bottomColor, topColor, max( pow( max( h, 0.0 ), exponent ), 0.0 ) ), 1.0 );
+            gl_FragColor=gl_FragColor*vec4(brightness,brightness,brightness,1.);
+        }
+        `;
+
 	import { T, useFrame } from '@threlte/core';
 	import { Float, Instance, InstancedMesh, useTexture } from '@threlte/extras';
 	// import { Color, DoubleSide, Vector3, Sphere } from 'three';
@@ -40,21 +91,7 @@
             gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
         }
         `,
-			fragmentShader: `
-        uniform vec3 topColor;
-        uniform vec3 bottomColor;
-        uniform float offset;
-        uniform float exponent;
-        uniform float brightness;
-
-        varying vec3 vWorldPosition;
-
-        void main() {
-            float h = normalize( vWorldPosition ).y + offset;
-            gl_FragColor = vec4( mix( bottomColor, topColor, max( pow( max( h, 0.0 ), exponent ), 0.0 ) ), 1.0 );
-            gl_FragColor=gl_FragColor*vec4(brightness,brightness,brightness,1.);
-        }
-        `,
+			fragmentShader: gradientFs,
 			side: BackSide
 		});
 
@@ -64,7 +101,8 @@
 
 		//return <mesh position={position} material={skyMat} geometry={skyGeo} />;
 	}
-	PurpleSky(0x11e8bb, 0x8200c9, 0.5, 1.5, 0.1, [0, 0, 0], 256);
+	// PurpleSky(0x11e8bb, 0x8200c9, 0.5, 1.5, 0.1, [0, 0, 0], 256);
+	skyGeometry = new SphereGeometry(256, 32, 15);
 
 	function glitter() {
 		// Vertex Shader
@@ -81,7 +119,7 @@
 `;
 
 		// Fragment Shader
-		const fragmentShader = `
+		const worbleFs = `
   uniform float iTime;
   uniform vec2 iResolution;
   varying vec2 vUv;
@@ -144,10 +182,12 @@ void main()
     // base color pattern
     vec3 col = getColor( 0.5*length(p) );
     // Darken the color
-    col *= 0.01;
+    col *= 0.00786;
 
     // Make the red component blink over time
     col.r *= abs(sin(iTime * 3.0)*0.5+0.5)*5.; // Adjust the frequency as needed
+	//col.b *= abs(cos(iTime * 3.0)*0.5+0.5)*5.; // Adjust the frequency as needed
+
     gl_FragColor = vec4( col, .01 );
 }
 `;
@@ -159,23 +199,9 @@ void main()
 				iResolution: { value: new Vector2(window.innerWidth, window.innerHeight) }
 			},
 			vertexShader: vertexShader,
-			fragmentShader: fragmentShader,
+			fragmentShader: worbleFs,
 			side: BackSide
 		});
-
-		// // Create a plane and apply the shader material
-		// const geometry = new PlaneGeometry(2, 2);
-		// const plane = new Mesh(geometry, shaderMaterial);
-		// scene.add(plane);
-
-		// // Update the uniform values in the animation loop
-		// function animate() {
-		// 	requestAnimationFrame(animate);
-		// 	shaderMaterial.uniforms.iTime.value = performance.now() / 1000;
-		// 	renderer.render(scene, camera);
-		// }
-
-		// animate();
 	}
 	glitter();
 	let time = 0;
@@ -190,5 +216,4 @@ void main()
 	material={skyMaterial}
 	geometry={skyGeometry}
 	rotation.z={Math.PI}
-	receiveShadow
 />

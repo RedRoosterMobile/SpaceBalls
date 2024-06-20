@@ -1,8 +1,5 @@
 <script lang="js">
-	function r(min, max) {
-		let diff = Math.random() * (max - min);
-		return min + diff;
-	}
+	import { r } from '../helpers';
 	import { T, useTask, useThrelte } from '@threlte/core';
 	import {
 		Mesh,

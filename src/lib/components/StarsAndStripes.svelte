@@ -13,6 +13,7 @@
 	} from 'three';
 	import { onDestroy, onMount } from 'svelte';
 	import { itemsStore } from '../store.js';
+	import { r } from '../helpers';
 
 	let BALLS_COUNT = 10;
 	let BALL_SPEED_MULT = 5;
@@ -39,11 +40,6 @@
 	export const ref = new Group();
 
 	const map = useTexture('textures/star.png');
-
-	function r(min, max) {
-		let diff = Math.random() * (max - min);
-		return min + diff;
-	}
 
 	function resetStar(star) {
 		if (r(0, 1) > 0.8) {

@@ -13,6 +13,12 @@ final fantasy
 https://www.youtube.com/watch?v=QA789JzHU_0
 https://www.ign.com/wikis/final-fantasy-7-rebirth/Galactic_Saviors
 
+music:
+https://www.youtube.com/watch?v=1JTURaBQwe0&list=TLPQMTgwNjIwMjQYKDgRjKHNFw&index=1&pp=gAQBiAQB8AUB
+have some tool where you can trigger different enemies of effects, debending on the sounds
+REZ style
+
+
 
 shooting:
 make sure the laser does not go furter than I can see

@@ -3,15 +3,11 @@
 	import { T, useRender, useThrelte, useTask } from '@threlte/core';
 	import { OrbitControls, Float, Sky, Stars, Grid, AnimatedSpriteMaterial } from '@threlte/extras';
 	import { SimonDevGLSLCourse } from '../classes/SimonDevGLSLCourse';
+	import { r } from '../helpers';
 
 	import PurpleSky from './PurpleSky.svelte';
 
 	const LASER_WIDTH = 0.5;
-
-	function r(min, max) {
-		let diff = Math.random() * (max - min);
-		return min + diff;
-	}
 
 	const { scene, camera, renderer } = useThrelte();
 	renderer.setPixelRatio(Math.min(1.5, window.devicePixelRatio));

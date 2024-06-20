@@ -89,10 +89,8 @@
 
 	const LASER_WIDTH = 0.5;
 
-	function r(min, max) {
-		let diff = Math.random() * (max - min);
-		return min + diff;
-	}
+	import { r } from '../helpers';
+	import Moire from './Moire.svelte';
 
 	const { scene, camera, renderer } = useThrelte();
 	console.log(renderer);
@@ -636,3 +634,5 @@
 <!-- <Boids position={[0, 0, 0]}/> -->
 <!-- <FallingParticles/> -->
 <FallingParticlesInstanced/>
+
+<Moire/>
