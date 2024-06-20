@@ -85,10 +85,18 @@
 				scale: r(0.5, 1.5),
 				speed: r(0.5, 1.5) * BALL_SPEED_MULT,
 				floatSpeed: r(0.5, 1.5),
-				offset: 0
+				offset: 0,
+				zFactor: Math.random() * 2 - 1, // Random value between -1 and 1
+				zTween: {
+					start: r(30, -45),
+					end: r(30, -45) + (Math.random() * 2 - 1) * 5,
+					duration: Math.random() * 3 + 2,
+					elapsed: 0
+				}
 			});
 		}
 	}
+
 	function resetBall(ball, index) {
 		const color = new Color(colors[Math.floor(Math.random() * colors.length)])
 			.convertSRGBToLinear()
@@ -107,14 +115,32 @@
 
 		ball.color = color;
 		ball.speed = r(0.5, 1.5) * BALL_SPEED_MULT;
-		//ball.speed = 1;
 		ball.floatSpeed = r(0.5, 1.5);
-		// bs
-		// console.log(ball.color);
-		// ball.offset = Math.sin(time) * 5;
 		ball.visible = true;
+		ball.zFactor = Math.random() * 2 - 1;
+		ball.zTween = {
+			start: r(19, -19),
+			end: r(19, -19) + (Math.random() * 2 - 1) * 5,
+			duration: Math.random() * 3 + 2,
+			elapsed: 0
+		};
 		balls[index] = ball;
 	}
+
+	// Tweening function to update the ball's z position smoothly
+	function updateTween(ball, delta) {
+		ball.zTween.elapsed += delta;
+		if (ball.zTween.elapsed >= ball.zTween.duration) {
+			ball.zTween.start = ball.pos.z;
+			ball.zTween.end = ball.pos.z + (Math.random() * 2 - 1) * 5;
+			ball.zTween.duration = Math.random() * 3 + 2;
+			ball.zTween.elapsed = 0;
+		}
+		let t = ball.zTween.elapsed / ball.zTween.duration;
+		ball.pos.z = ball.zTween.start + t * (ball.zTween.end - ball.zTween.start);
+	}
+
+	// Initialize balls
 	createBalls();
 
 	onMount(() => {
@@ -129,15 +155,17 @@
 		});
 		stars = stars;
 		let index = 0;
-		let rng = 0;
+		// let rng =0;
 		balls.forEach((ball) => {
 			ball.pos.x += ball.speed * 10 * delta;
 			if (ball.pos.x > 40) {
 				resetBall(ball, index);
 				index++;
 			}
-			ball.pos.z += Math.sin(time) * 0.02 * ball.color.r * rng;
-			rng++;
+			// ball.pos.z += Math.sin(time) * 0.02 * ball.color.r * rng;
+			//rng++;
+
+			updateTween(ball, delta);
 		});
 		balls = balls;
 
