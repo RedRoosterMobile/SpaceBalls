@@ -1,4 +1,5 @@
 <script>
+	import { GlobalData } from './GlobalData';
 	import { T, useFrame, forwardEventHandlers } from '@threlte/core';
 	import { Float, Instance, InstancedMesh, useTexture, Billboard } from '@threlte/extras';
 	import {
@@ -16,17 +17,17 @@
 
 	let BALLS_COUNT = 10;
 	let BALL_SPEED_MULT = 5;
-	let balls = [];
+	let balls = GlobalData.balls;
 
 	// Subscribe to the store to get the initial value and updates
-	const unsubscribe = itemsStore.subscribe((value) => {
-		balls = value;
-	});
+	// const unsubscribe = itemsStore.subscribe((value) => {
+	// 	balls = value;
+	// });
 
 	// Clean up the subscription
-	onDestroy(() => {
-		unsubscribe();
-	});
+	// onDestroy(() => {
+	// 	unsubscribe();
+	// });
 
 	let STARS_COUNT = 350;
 	let colors = ['#fcaa67', '#C75D59', '#ffffc7', '#8CC5C6', '#A5898C'];
@@ -147,6 +148,7 @@
 		console.log('mounted', $$restProps);
 	});
 
+	let imRef = null;
 	useFrame((_, delta) => {
 		time += delta;
 		stars.forEach((star) => {
@@ -163,13 +165,20 @@
 				index++;
 			}
 			// ball.pos.z += Math.sin(time) * 0.02 * ball.color.r * rng;
-			//rng++;
+			// rng++;
 
 			updateTween(ball, delta);
 		});
+		// if (imRef) {
+		// 	//console.log(imRef);
+		// 	imRef.instanceMatrix.needsUpdate = true;
+		// }
+
+		// FIX: do the ball rendering in js instead, to bypass svelte renderer stuff
 		balls = balls;
 
-		itemsStore.set(balls);
+
+		//itemsStore.set(balls);
 	});
 	const component = forwardEventHandlers();
 	function lookAtOrigin(position) {
@@ -205,7 +214,7 @@
 			{/each}
 		</InstancedMesh>
 
-		<InstancedMesh limit={BALLS_COUNT} range={BALLS_COUNT}>
+		<InstancedMesh bind:ref={imRef} limit={BALLS_COUNT} range={BALLS_COUNT}>
 			<T.SphereGeometry args={[1, 32, 32]} />
 
 			<T.MeshBasicMaterial />

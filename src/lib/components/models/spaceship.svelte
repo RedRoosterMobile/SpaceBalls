@@ -106,6 +106,9 @@ Title: Rusty Spaceship - Orange
 				position={[789.52, 59.45, -224.91]}
 				rotation={[1, 0, 0]}
 			/>
+
+
+			<!-- next 3: outer plates on one side --> 
 			<T.Mesh
 				castShadow
 				receiveShadow
@@ -113,6 +116,7 @@ Title: Rusty Spaceship - Orange
 				material={gltf.materials.spaceship_racer}
 				position={[745.54, 159.32, -5.92]}
 			/>
+			
 			<T.Mesh
 				castShadow
 				receiveShadow
@@ -120,6 +124,7 @@ Title: Rusty Spaceship - Orange
 				material={gltf.materials.spaceship_racer}
 				position={[739.26, 0, 0]}
 			/>
+			
 			<T.Mesh
 				castShadow
 				receiveShadow
@@ -127,6 +132,8 @@ Title: Rusty Spaceship - Orange
 				material={gltf.materials.spaceship_racer}
 				position={[739.26, 0, 0]}
 			/>
+
+			<!-- dunno the next two-->
 			<T.Mesh
 				castShadow
 				receiveShadow
@@ -141,9 +148,12 @@ Title: Rusty Spaceship - Orange
 				material={gltf.materials.spaceship_racer}
 				position={[739.26, 0, 0]}
 			/>
+
+
+			<!-- inner stuff -->
 			<T.Mesh
-				castShadow
-				receiveShadow
+				castShadow={false}
+				receiveShadow={false}
 				geometry={gltf.nodes.Cube001_RPanel003_RExtr001_spaceship_racer_0.geometry}
 				material={gltf.materials.spaceship_racer}
 				position={[739.26, 0, 0]}

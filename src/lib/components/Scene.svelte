@@ -1,4 +1,5 @@
 <script>
+  import { GlobalData } from './GlobalData';
 	import { T, useRender, useThrelte } from '@threlte/core';
 	import { OrbitControls, Float, Sky, Stars, Grid, AnimatedSpriteMaterial } from '@threlte/extras';
 	import Spaceship from './models/spaceship.svelte';
@@ -91,13 +92,12 @@
 
 	import { r } from '../helpers';
 	import Moire from './Moire.svelte';
+	import Balls from './Balls.svelte';
+	import Stripes from './Stripes.svelte';
 
 	const { scene, camera, renderer } = useThrelte();
 	console.log(renderer);
 	renderer.setPixelRatio(Math.min(1.5, window.devicePixelRatio));
-
-
-	
 
 	let spaceShipRef;
 	let playerBodyRef;
@@ -157,11 +157,11 @@
 	};
 
 	const spaceShipColliderBox = new Box3();
-	let balls = [];
+	let balls = GlobalData.balls;
 	// Subscribe to the store to get the initial value and updates
-	const unsubscribe = itemsStore.subscribe((value) => {
-		balls = value;
-	});
+	// const unsubscribe = itemsStore.subscribe((value) => {
+	// 	balls = value;
+	// });
 
 	// this will kick it out of the array..
 	// how to add new ones?
@@ -178,10 +178,10 @@
 		itemsStore.set(balls); // Update the store
 	}
 
-	// Clean up the subscription
-	onDestroy(() => {
-		unsubscribe();
-	});
+	// // Clean up the subscription
+	// onDestroy(() => {
+	// 	unsubscribe();
+	// });
 
 	const composer = new EffectComposer(renderer);
 	composer.setSize(innerWidth, innerHeight);
@@ -471,15 +471,14 @@
 		floatSpeed = 6;
 	}
 
-  let boids;
+	let boids;
 	onMount(() => {
 		setupEffectComposer();
-    boids = new GpuBoids(new GPUComputationRenderer(WIDTH, WIDTH, renderer), scene);
 
 		const planeGeo = new PlaneGeometry(40, 40);
 		const planeMat = new MeshBasicMaterial({
 			color: 0xff0000,
-			side: DoubleSide, // Double-sided
+			side: DoubleSide // Double-sided
 			// transparent: true, // Enable transparency
 			// opacity: 0.25 // Set opacity level (0.0 to 1.0)}); // 0xff0000 is the hexadecimal value for red
 		});
@@ -490,6 +489,8 @@
 
 		const raycaster = new Raycaster();
 		const pointer = new Vector2();
+
+		boids = new GpuBoids(new GPUComputationRenderer(WIDTH, WIDTH, renderer), scene);
 
 		function onPointerMove(event) {
 			// billboarding
@@ -539,20 +540,6 @@
 		};
 	});
 
-	// sprite hooks
-	// let play = () => {
-	// 	console.log('play');
-	// };
-	// let pause = () => {
-	// 	console.log('pause');
-	// };
-	// let onEnd = () => {
-	// 	console.log('ended');
-	// };
-	// let onStart = () => {
-	// 	console.log('started');
-	// };
-
 	// laser: super long, thin billboards https://youtu.be/LltugBg4dtk?si=wwXuxxDQYK3lDOa7&t=501
 	let sfxLaser;
 	let sfxExplosion;
@@ -588,10 +575,15 @@
 
 <T.DirectionalLight intensity={1.8} position={[0, 10, 0]} castShadow shadow.bias={-0.0001} />
 
-<!-- <T.Mesh renderOrder={0} bind:ref={planeRef} rotation={[Math.PI / 2, 0, 0, 'XYZ']}>
-	<T.PlaneGeometry args={[2, 2]} />
-	<T.MeshBasicMaterial side={DoubleSide} color={[1, 0, 1]} transparent opacity={0.25} />
-</T.Mesh> -->
+<!-- backround -->
+<PurpleSky />
+
+<Stripes/>
+<!-- enemies -->
+<Balls/>
+
+
+<!-- player -->
 <!-- rotation={[angleZ, 0, angleZ, 'ZXY']} -->
 <Float speed={floatSpeed} floatingRange={[-0.5, 0.5]} rotationIntensity={0.01} rotationSpeed={50}>
 	<Spaceship
@@ -600,7 +592,6 @@
 		rotation={[-angleY, angleY * 0.1, 0, 'ZXY']}
 	/>
 </Float>
-
 <T.Mesh
 	bind:ref={playerBodyRef}
 	geometry={new BoxGeometry(2, 1, 1)}
@@ -608,10 +599,20 @@
 	material={new MeshBasicMaterial()}
 />
 
-<StarsAndStripes bind:ref={starsAndStripesRef} />
+
+<FallingParticlesInstanced/>
+
+<!-- legacy stuff -->
+
+
+<!-- <T.Mesh renderOrder={0} bind:ref={planeRef} rotation={[Math.PI / 2, 0, 0, 'XYZ']}>
+	<T.PlaneGeometry args={[2, 2]} />
+	<T.MeshBasicMaterial side={DoubleSide} color={[1, 0, 1]} transparent opacity={0.25} />
+</T.Mesh> -->
+<!-- <StarsAndStripes bind:ref={starsAndStripesRef} /> -->
 <!-- https://threlte.xyz/docs/reference/extras/stars -->
 <!-- <Stars lightness={0.1} factor={6} radius={50} /> -->
-<PurpleSky />
+
 <!-- <Grid sectionThickness={1} infiniteGrid cellColor="#dddddd" cellSize={2} /> -->
 <!-- <T.Sprite position={[0, 1, translZ]} bind:ref={fireRef}>
 	<AnimatedSpriteMaterial
@@ -633,6 +634,8 @@
 <!-- shitty boids - can't scale 'em properly, too many draw calls -->
 <!-- <Boids position={[0, 0, 0]}/> -->
 <!-- <FallingParticles/> -->
-<FallingParticlesInstanced/>
+
 
 <!-- <Moire/> -->
+
+
