@@ -262,17 +262,17 @@ export class SimonDevGLSLCourse {
 
 		this.totalTime_ = 0;
 	}
-  CreateMesh_() {
-    const geo = this.grassGeometry_;
-    const mat = this.grassMaterial_;
+	CreateMesh_() {
+		const geo = this.grassGeometry_;
+		const mat = this.grassMaterial_;
 
-    const m = new THREE.Mesh(geo, mat);
-    m.position.set(0, 0, 0);
-    m.visible = false;
+		const m = new THREE.Mesh(geo, mat);
+		m.position.set(0, 0, 0);
+		m.visible = false;
 
-    this.grassGroup_.add(m);
-    return m;
-  }
+		this.grassGroup_.add(m);
+		return m;
+	}
 
 	update(delta) {
 		//this.totalTime_ = time;

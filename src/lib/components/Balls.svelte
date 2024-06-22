@@ -8,6 +8,8 @@
 
 	let BALLS_COUNT = 10;
 	let BALL_SPEED_MULT = 5;
+    // let BALLS_COUNT = 5;
+	// let BALL_SPEED_MULT = 2.5;
 	let balls = GlobalData.balls;
 	let colors = ['#fcaa67', '#C75D59', '#ffffc7', '#8CC5C6', '#A5898C'];
 	const dummy = new Object3D();
@@ -60,7 +62,7 @@
 		ball.pos = new Vector3(r(-200, -255), 0.5 * ball.scale, r(19, -19));
 
 		// all in one line
-		//ball.pos = new Vector3(-200, 0.5 * ball.scale, -5);
+		//ball.pos = new Vector3(-200, 0.5 * ball.scale, 0);
 
 		ball.color = color;
 		ball.speed = r(0.5, 1.5) * BALL_SPEED_MULT;
@@ -86,7 +88,7 @@
 			ball.zTween.elapsed = 0;
 		}
 		let t = ball.zTween.elapsed / ball.zTween.duration;
-		ball.pos.z = ball.zTween.start + t * (ball.zTween.end - ball.zTween.start);
+		//ball.pos.z = ball.zTween.start + t * (ball.zTween.end - ball.zTween.start);
 	}
 
 	// Initialize balls

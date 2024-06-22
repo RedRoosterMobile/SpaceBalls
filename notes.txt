@@ -35,3 +35,10 @@ explosion
 
 
 die
+
+
+
+
+cool examples: FFT, ..
+
+#https://sbcode.net/threejs/raycast-to-skinnedmesh/

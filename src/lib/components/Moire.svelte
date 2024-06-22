@@ -12,8 +12,8 @@
 	const particles = [];
 
 	init();
-	//animate();
 	function init() {
+		// why a shpere??
 		const geometry = new SphereGeometry(0.05, 16, 16);
 		const material = new MeshBasicMaterial({ color: 0xffffff });
 		instancedMesh = new InstancedMesh(geometry, material, particleCount);
@@ -41,7 +41,9 @@
 			const x = particle.y + Math.sin(time) + Math.sin(time * 7.5 + particle.y * 0.5) * 0.5;
 			//Math.sin(time) + Math.sin(time * 2) / 2;
 			const z = Math.sin(time) + (i % 2) * Math.cos(time);
-			dummy.position.set(z, y, x);
+			// play with order to rotate
+			dummy.position.set(x, z, y);
+			// shit not working...
 			//dummy.setRotationFromAxisAngle()
 			//dummy.rotateX((i / particleCount) * Math.PI * 2);
       //(true) && dummy.rotateOnWorldAxis(new Vector3(1,0,0),Math.PI/2)

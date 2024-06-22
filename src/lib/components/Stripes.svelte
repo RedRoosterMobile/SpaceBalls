@@ -57,7 +57,7 @@
 		});
 		stars = stars;
 	});
-	function lookAtOrigin(position) {
+	function lookAtOrigin(position,disco=false) {
 		const dx = -position.x;
 		const dy = -position.y;
 		const dz = -position.z;
@@ -68,7 +68,7 @@
 		const rotationY = Math.atan2(dx, dz);
 		const rotationX = Math.atan2(dy, distanceXY);
 
-		return [rotationX, 0, 0]; // Assuming no roll needed
+		return [0, 0, 0]; // Assuming no roll needed
 	}
 </script>
 

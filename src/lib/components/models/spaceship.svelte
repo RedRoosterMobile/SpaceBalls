@@ -18,9 +18,10 @@ Title: Rusty Spaceship - Orange
 		MeshBasicMaterial,
 		OneFactor
 	} from 'three';
-	import { T, forwardEventHandlers, useFrame } from '@threlte/core';
+	import { T, forwardEventHandlers, useFrame, useTask } from '@threlte/core';
 	import { useGltf } from '@threlte/extras';
 	import { useTexture } from '@threlte/extras';
+	import { r } from '../../helpers';
 
 	export const ref = new Group();
 	let afterBurnerScaleY = 1;
@@ -51,12 +52,22 @@ Title: Rusty Spaceship - Orange
 	//const cylinderGeo = new CylinderGeometry(70, 0, 1600, 15);
 	//window.cg = cylinderGeo;
 
-	useFrame((_, delta) => {
+	let randomValue = 1;
+	let targetRandomValue = 1;
+	const timeBetweenRandomValuesS = 1; // seconds
+	let timeToNextRandomValue = timeBetweenRandomValuesS;
+	let lerpSpeed = 0.05; // Adjust this value to change the speed of interpolation
+	useTask((delta) => {
 		time += delta;
-		//if (cylinderGeo) {
-		const scale = Math.sin(time * 10) * 0.1;
+		timeToNextRandomValue -= delta;
+		if (timeToNextRandomValue <= 0) {
+			targetRandomValue = r(1, 1.5);
+			timeToNextRandomValue = timeBetweenRandomValuesS;
+		}
+		// Interpolate towards the target value
+		randomValue += (targetRandomValue - randomValue) * lerpSpeed;
+		const scale = Math.sin(time * 10 * randomValue) * 0.1;
 		afterBurnerScaleY = 1 + scale;
-		//}
 	});
 
 	const component = forwardEventHandlers();
@@ -107,8 +118,7 @@ Title: Rusty Spaceship - Orange
 				rotation={[1, 0, 0]}
 			/>
 
-
-			<!-- next 3: outer plates on one side --> 
+			<!-- next 3: outer plates on one side -->
 			<T.Mesh
 				castShadow
 				receiveShadow
@@ -116,7 +126,7 @@ Title: Rusty Spaceship - Orange
 				material={gltf.materials.spaceship_racer}
 				position={[745.54, 159.32, -5.92]}
 			/>
-			
+
 			<T.Mesh
 				castShadow
 				receiveShadow
@@ -124,7 +134,7 @@ Title: Rusty Spaceship - Orange
 				material={gltf.materials.spaceship_racer}
 				position={[739.26, 0, 0]}
 			/>
-			
+
 			<T.Mesh
 				castShadow
 				receiveShadow
@@ -148,7 +158,6 @@ Title: Rusty Spaceship - Orange
 				material={gltf.materials.spaceship_racer}
 				position={[739.26, 0, 0]}
 			/>
-
 
 			<!-- inner stuff -->
 			<T.Mesh

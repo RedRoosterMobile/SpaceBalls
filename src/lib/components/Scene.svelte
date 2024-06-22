@@ -1,5 +1,5 @@
 <script>
-  import { GlobalData } from './GlobalData';
+	import { GlobalData } from './GlobalData';
 	import { T, useRender, useThrelte } from '@threlte/core';
 	import { OrbitControls, Float, Sky, Stars, Grid, AnimatedSpriteMaterial } from '@threlte/extras';
 	import Spaceship from './models/spaceship.svelte';
@@ -12,6 +12,7 @@
 		AudioLoader,
 		AudioListener,
 		Audio,
+		PositionalAudio,
 		MeshBasicMaterial,
 		MeshLambertMaterial,
 		MeshPhongMaterial,
@@ -23,6 +24,7 @@
 		DoubleSide,
 		BackSide,
 		FrontSide,
+		Sphere,
 		BoxGeometry,
 		// https://dustinpfister.github.io/2022/05/09/threejs-box3/
 		Box3,
@@ -35,7 +37,8 @@
 		LineBasicMaterial,
 		SpriteMaterial,
 		AdditiveBlending,
-		Sprite
+		Sprite,
+		Object3D
 	} from 'three';
 	import * as THREE from 'three';
 
@@ -163,13 +166,6 @@
 	// 	balls = value;
 	// });
 
-	// this will kick it out of the array..
-	// how to add new ones?
-	function removeItem(id) {
-		balls = balls.filter((item) => item.id !== id);
-		itemsStore.set(balls); // Update the store
-	}
-
 	function hideItem(id) {
 		balls = balls.map((item) => {
 			if (item.id === id) item.visible = false;
@@ -256,7 +252,14 @@
 		time += delta;
 
 		currentDelta = delta;
-		if (animateLaser) laser.position.x = laser.position.x - delta * 1000;
+		if (animateLaser) {
+			laser.position.x = laser.position.x - delta * 1000;
+			const aBitBack = laser.position;
+			const laserDirection = new THREE.Vector3(1, 0, 0); // Adjust based on laser direction
+			laserDirection.applyQuaternion(spaceShipRef.quaternion); // Align direction with spaceship orientation
+			checkLaserToBallCollision2(aBitBack, laserDirection);
+		}
+		// mouse pos
 		if (intersectionPoint) {
 			// const targetY = intersectionPoint?.y || 0;
 			// translAccelleration += (targetY - translY) * 0.002; // stiffness
@@ -319,7 +322,6 @@
 		//rgbShiftFx.uniforms['amount'].value = 0.0015;
 		const zto = Math.sin(time * 4) * 0.5 + 0.5;
 		rgbShiftFx.uniforms['amount'].value = zto * 0.0015;
-		//console.log(floatSpeed);
 		$camera.lookAt(cameraTarget);
 		// billboarding
 		//planeRef.lookAt(camera.current.position);
@@ -334,7 +336,7 @@
 
 		timeToRenderBird -= delta;
 		if (timeToRenderBird <= 0) {
-			boids && boids.update(delta);
+			// boids && boids.update(delta);
 			timeToRenderBird = 0.024;
 		}
 
@@ -360,7 +362,6 @@
 				spaceShipColliderBox.intersectsSphere({ center: ball.pos, radius: ball.scale })
 			) {
 				//console.log('Player is overlapping the target mesh!');
-				//fireRef.visible = true;
 				screenshakeOffset = 1;
 				motionBlurStrength = 1;
 				hideItem(ball.id);
@@ -373,10 +374,10 @@
 					lastExplosion = 1;
 					// we hit sth: stop the laser
 					sfxLaser.stop();
+					sfxExplosion.setRefDistance(255);
 					sfxExplosion.play();
 					return;
 				}
-				// play();
 			}
 		});
 	}
@@ -409,14 +410,39 @@
 	}
 
 	const raycaster = new Raycaster();
+
+	function checkLaserToBallCollision2(laserStartPosition, laserDirection) {
+		// just shoot the laser, keep it going on it's way
+		// on every frame make a new raycast in it's direction to see if there's a hit
+		// have a max lifetime to self desruct laser
+
+		// make sure only the ones in front (x) and not left or right get blasted
+		let sortedBalls = balls
+			.slice() // copy original order, because of sort later
+			.filter((ball) => ball.visible && ball.pos.x < 0 && ball.pos.x >= laser.position.x) // only alive balls that are not behind me(visually), and balls that are behind laser
+			.sort((a, b) => laserStartPosition.distanceTo(a.pos) - laserStartPosition.distanceTo(b.pos)); // closest first
+
+		for (const ball of sortedBalls) {
+			if (
+				rayIntersectsSphere(laserStartPosition, laserDirection, ball.pos, ball.scale + LASER_WIDTH)
+			) {
+				handleHit(ball);
+				break;
+			}
+		}
+		// GC the new array
+		sortedBalls = null;
+	}
+	let laserTimeout;
 	function shootLaser(position) {
 		if (animateLaser) return;
 		if (sfxLaser.isPlaying) sfxLaser.stop();
 		sfxLaser.play();
 		// Update the laser's position
 
-		const laserStartPosition = new THREE.Vector3(-laser.geometry.parameters.height / 2, 0, 0);
-		laserStartPosition.applyMatrix4(spaceShipRef.matrixWorld); // Convert to world coordinates
+		//const laserStartPosition = new THREE.Vector3(-laser.geometry.parameters.height / 2, 0, 0);
+		//laserStartPosition.applyMatrix4(spaceShipRef.matrixWorld); // Convert to world coordinates
+		const laserStartPosition = position;
 		laser.position.copy(laserStartPosition);
 		laser.visible = true;
 		animateLaser = true;
@@ -424,32 +450,11 @@
 		const laserDirection = new THREE.Vector3(1, 0, 0); // Adjust based on laser direction
 		laserDirection.applyQuaternion(spaceShipRef.quaternion); // Align direction with spaceship orientation
 
-		raycaster.set(laserStartPosition, laserDirection);
-
-		// make sure only the ones in front (x) and not left or right get blasted
-		const sortedBalls = balls
-			.slice() // keep original order
-			.filter((ball) => ball.visible && ball.pos.x < 0) // only alive balls that are not behind me
-			.sort((a, b) => laserStartPosition.distanceTo(a.pos) - laserStartPosition.distanceTo(b.pos)); // closest first
-
-		let hitBall = null;
-
-		// Check for intersections in order of proximity
-		for (const ball of sortedBalls) {
-			if (
-				rayIntersectsSphere(laserStartPosition, laserDirection, ball.pos, ball.scale + LASER_WIDTH)
-			) {
-				hitBall = ball;
-				break;
-			}
-		}
-		if (hitBall) {
-			// Handle hit (e.g., remove the object, play a sound, etc.)
-			handleHit(hitBall);
-		}
+		// do that while animating the laser
+		// checkLaserToBallCollision(laserStartPosition, laserDirection);
 
 		// Hide the laser after a short duration
-		setTimeout(() => {
+		laserTimeout = setTimeout(() => {
 			laser.visible = false;
 			animateLaser = false; // also prevents further shoots
 		}, laserDuration);
@@ -467,8 +472,15 @@
 		);
 		if (sfxExplosion.isPlaying) sfxExplosion.stop();
 		sfxExplosion.position.copy(ball.pos);
+		console.log(spaceShipRef);
+		const distance = spaceShipRef.position.distanceTo(ball.pos);
+		console.log(distance);
+		sfxExplosion.setRefDistance(255/distance);
 		sfxExplosion.play();
 		floatSpeed = 6;
+		clearTimeout(laserTimeout);
+		laser.visible = false;
+		animateLaser = false; // also prevents further shoots
 	}
 
 	let boids;
@@ -487,10 +499,10 @@
 		// Add the mesh to the scene to actually see it
 		//scene.add(mesh);
 
-		const raycaster = new Raycaster();
+		//const raycaster = new Raycaster();
 		const pointer = new Vector2();
 
-		boids = new GpuBoids(new GPUComputationRenderer(WIDTH, WIDTH, renderer), scene);
+		// boids = new GpuBoids(new GPUComputationRenderer(WIDTH, WIDTH, renderer), scene);
 
 		function onPointerMove(event) {
 			// billboarding
@@ -559,11 +571,12 @@
 			sfxLaser.setVolume(0.5);
 		});
 
-		sfxExplosion = new Audio(listener);
+		sfxExplosion = new PositionalAudio(listener);
+		sfxExplosion.setRolloffFactor(1); // Adjust this value to fit your needs
 		audioLoader.load('./audio/Explosion.mp3', function (buffer) {
 			sfxExplosion.setBuffer(buffer);
 			sfxExplosion.setLoop(false);
-			sfxExplosion.setVolume(0.35);
+			sfxExplosion.setVolume(1);
 		});
 	}
 </script>
@@ -577,15 +590,12 @@
 
 <!-- backround -->
 <PurpleSky />
-
-<Stripes/>
+<Stripes />
 <!-- enemies -->
-<Balls/>
-
-
+<Balls />
 <!-- player -->
-<!-- rotation={[angleZ, 0, angleZ, 'ZXY']} -->
 <Float speed={floatSpeed} floatingRange={[-0.5, 0.5]} rotationIntensity={0.01} rotationSpeed={50}>
+	<!-- rotation={[angleZ, 0, angleZ, 'ZXY']} -->
 	<Spaceship
 		bind:ref={spaceShipRef}
 		position={[0, 0, translZ]}
@@ -599,11 +609,10 @@
 	material={new MeshBasicMaterial()}
 />
 
+<!-- purple confetti -->
+<!-- <FallingParticlesInstanced /> -->
 
-<FallingParticlesInstanced/>
-
-<!-- legacy stuff -->
-
+<!-- legacy stuff BELOW -->
 
 <!-- <T.Mesh renderOrder={0} bind:ref={planeRef} rotation={[Math.PI / 2, 0, 0, 'XYZ']}>
 	<T.PlaneGeometry args={[2, 2]} />
@@ -635,7 +644,4 @@
 <!-- <Boids position={[0, 0, 0]}/> -->
 <!-- <FallingParticles/> -->
 
-
 <!-- <Moire/> -->
-
-
