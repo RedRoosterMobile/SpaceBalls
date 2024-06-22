@@ -88,7 +88,7 @@
 			ball.zTween.elapsed = 0;
 		}
 		let t = ball.zTween.elapsed / ball.zTween.duration;
-		//ball.pos.z = ball.zTween.start + t * (ball.zTween.end - ball.zTween.start);
+		ball.pos.z = ball.zTween.start + t * (ball.zTween.end - ball.zTween.start);
 	}
 
 	// Initialize balls

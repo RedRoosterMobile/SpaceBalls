@@ -3,6 +3,11 @@
 	import { T, useRender, useThrelte } from '@threlte/core';
 	import { OrbitControls, Float, Sky, Stars, Grid, AnimatedSpriteMaterial } from '@threlte/extras';
 	import Spaceship from './models/spaceship.svelte';
+
+	// use these!!
+	import { tweened } from 'svelte/motion';
+	import { quadInOut } from 'svelte/easing';
+
 	import { BirdGeometry } from '../classes/BirdGeometry';
 	import { GPUComputationRenderer } from 'three/addons/misc/GPUComputationRenderer';
 	import { GeneralParticleSystemSimon } from '../classes/GeneralParticleSystemSimon';
@@ -120,6 +125,7 @@
 	let pmrem = new PMREMGenerator(renderer);
 	let envMapRT;
 	let animateLaser = false;
+	let stripeSpeed = 1;
 
 	let fireRef;
 	let cameraTarget = new Vector3(0, 0, 0);
@@ -292,11 +298,9 @@
 			angleAccelleration *= 0.85; // damping
 			angleY += angleAccelleration;
 
-			const sfxEngineVolume = 0.2;
-
 			const zeroToOne = Math.min(45, Math.abs(MathUtils.radToDeg(angleY))) / 45;
 
-			sfxEngine.setVolume(sfxEngineVolumeMin + zeroToOne / 2);
+			sfxEngine.setVolume(sfxEngineVolumeMin + zeroToOne / 4);
 		}
 
 		if (envMapRT) envMapRT.dispose();
@@ -488,7 +492,9 @@
 	}
 
 	let boids;
+	let tweenZeroToOne = tweened(0, { duration: 2000, easing: quadInOut });
 	onMount(() => {
+		$tweenZeroToOne = 1;
 		setupEffectComposer();
 
 		const planeGeo = new PlaneGeometry(40, 40);
@@ -604,7 +610,7 @@
 
 <!-- backround -->
 <PurpleSky />
-<Stripes />
+<Stripes speed={stripeSpeed + (1 - $tweenZeroToOne)*30} />
 <!-- enemies -->
 <Balls />
 <!-- player -->
@@ -614,6 +620,7 @@
 		bind:ref={spaceShipRef}
 		position={[0, 0, translZ]}
 		rotation={[-angleY, angleY * 0.1, 0, 'ZXY']}
+		scale.y={$tweenZeroToOne}
 	/>
 </Float>
 <T.Mesh
@@ -637,16 +644,13 @@
 <!-- <Stars lightness={0.1} factor={6} radius={50} /> -->
 
 <!-- <Grid sectionThickness={1} infiniteGrid cellColor="#dddddd" cellSize={2} /> -->
-<!-- <T.Sprite position={[0, 1, translZ]} bind:ref={fireRef}>
+<!-- <T.Sprite position={[0, 0,0]} bind:ref={fireRef}>
 	<AnimatedSpriteMaterial
-		bind:play
-		bind:pause
 		autoplay={false}
 		textureUrl="/textures/explosion.png"
 		totalFrames={16}
 		rows={4}
-		on:end={onEnd}
-		on:start={onStart}
+		
 		loop={false}
 		columns={4}
 		fps={20}

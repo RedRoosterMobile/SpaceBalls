@@ -1,12 +1,7 @@
 <script>
 	import { T, useFrame } from '@threlte/core';
-	import {  Instance, InstancedMesh, useTexture } from '@threlte/extras';
-	import {
-		Color,
-		DoubleSide,
-		Vector3,
-		Group,
-	} from 'three';
+	import { Instance, InstancedMesh, useTexture } from '@threlte/extras';
+	import { Color, DoubleSide, Vector3, Group } from 'three';
 	import { r } from '../helpers';
 
 	let STARS_COUNT = 350;
@@ -52,12 +47,12 @@
 	useFrame((_, delta) => {
 		time += delta;
 		stars.forEach((star) => {
-			star.pos.x += star.speed * delta;
+			star.pos.x += star.speed * delta * $$restProps.speed;
 			if (star.pos.x > 40) resetStar(star);
 		});
 		stars = stars;
 	});
-	function lookAtOrigin(position,disco=false) {
+	function lookAtOrigin(position, disco = false) {
 		const dx = -position.x;
 		const dy = -position.y;
 		const dz = -position.z;
