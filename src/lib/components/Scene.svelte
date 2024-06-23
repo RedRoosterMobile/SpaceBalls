@@ -103,6 +103,7 @@
 	import Moire from './Moire.svelte';
 	import Balls from './Balls.svelte';
 	import Stripes from './Stripes.svelte';
+	import Hearts from './Hearts.svelte';
 
 	const { scene, camera, renderer } = useThrelte();
 	console.log(renderer);
@@ -126,6 +127,7 @@
 	let envMapRT;
 	let animateLaser = false;
 	let stripeSpeed = 1;
+	let particlesCount = 50;
 
 	let fireRef;
 	let cameraTarget = new Vector3(0, 0, 0);
@@ -253,11 +255,14 @@
 	let explosionParticles;
 	let currentDelta = 0;
 	let floatSpeed = 3;
-	let motionBlurStrength = 0;
+	let motionBlurStrength = 1;
 	let timeToRenderBird = 0;
 	useRender(({ _, renderer, __ }, delta) => {
 		time += delta;
-
+		//particlesCount = 10 + Math.floor((Math.sin(time/300) * 0.5 + 0.5) * 10);
+		const zeroToNine = Math.floor((Math.sin(time) * 0.5 + 0.5) * 10);
+		particlesCount = 0 + zeroToNine;
+		//console.log(Math.floor((Math.sin(time) * 0.5 + 0.5) * 10));
 		currentDelta = delta;
 		if (animateLaser) {
 			laser.position.x = laser.position.x - delta * 1000;
@@ -448,6 +453,8 @@
 	function shootLaser(position) {
 		if (animateLaser) return;
 		if (sfxLaser.isPlaying) sfxLaser.stop();
+		// Set a random pitch between -1200 cents and 1200 cents (1 octave up and down)
+		sfxLaser.detune = Math.random() * 100 - 50;
 		sfxLaser.play();
 		// Update the laser's position
 
@@ -484,6 +491,8 @@
 		if (sfxExplosion.isPlaying) sfxExplosion.stop();
 		const distance = spaceShipRef.position.distanceTo(ball.pos);
 		sfxExplosion.setRefDistance(255 / distance);
+		// Set a random pitch between -1200 cents and 1200 cents (1 octave up and down)
+		sfxExplosion.detune = Math.random() * 100 - 50;
 		sfxExplosion.play();
 		floatSpeed = 6;
 		clearTimeout(laserTimeout);
@@ -610,7 +619,7 @@
 
 <!-- backround -->
 <PurpleSky />
-<Stripes speed={stripeSpeed + (1 - $tweenZeroToOne)*30} />
+<Stripes speed={stripeSpeed + (1 - $tweenZeroToOne) * 30} />
 <!-- enemies -->
 <Balls />
 <!-- player -->
@@ -630,8 +639,9 @@
 	material={new MeshBasicMaterial()}
 />
 
+
 <!-- purple confetti -->
-<!-- <FallingParticlesInstanced /> -->
+<FallingParticlesInstanced amount={particlesCount} />
 
 <!-- legacy stuff BELOW -->
 
@@ -663,3 +673,4 @@
 <!-- <FallingParticles/> -->
 
 <!-- <Moire/> -->
+<Hearts />

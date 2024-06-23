@@ -23,7 +23,7 @@
 		specular: 0xff0080,
 		emissive: 0x800080,
 		emissiveIntensity: 7.5,
-		side: DoubleSide,
+		side: DoubleSide
 		//side: FrontSide,
 		//forceSinglePass: true
 	});
@@ -91,7 +91,11 @@
 			position.x = startX - 100;
 		}
 
-		dummy.position.set(position.x, position.y, position.z);
+		let offScreenOffsetZ = 0;
+		if ($$restProps.amount < index+1) {
+			offScreenOffsetZ = 1000;
+		}
+		dummy.position.set(position.x, position.y, position.z + offScreenOffsetZ);
 		dummy.rotation.set(rotation.x, rotation.y, rotation.z);
 
 		dummy.updateMatrix();

@@ -16,8 +16,11 @@ Title: Rusty Spaceship - Orange
 		Group,
 		LessEqualDepth,
 		MeshBasicMaterial,
-		OneFactor
+		OneFactor,
+		TextureLoader,
+		RepeatWrapping
 	} from 'three';
+	//import { HeatDistortionMaterial } from '../../materials/HeatDistortionMaterial';
 	import { T, forwardEventHandlers, useFrame, useTask } from '@threlte/core';
 	import { useGltf } from '@threlte/extras';
 	import { useTexture } from '@threlte/extras';
@@ -26,6 +29,8 @@ Title: Rusty Spaceship - Orange
 	export const ref = new Group();
 	let afterBurnerScaleY = 1;
 	let time = 0;
+	// 	const tex=new TextureLoader().load('./textures/grid.png');
+	// console.log(tex);
 
 	const gltf = useGltf('./models/spaceship.glb');
 	const map = useTexture('textures/energy-beam-opacity.png');
@@ -64,6 +69,7 @@ Title: Rusty Spaceship - Orange
 			targetRandomValue = r(1, 1.5);
 			timeToNextRandomValue = timeBetweenRandomValuesS;
 		}
+		//uniforms.time.value = time;
 		// Interpolate towards the target value
 		randomValue += (targetRandomValue - randomValue) * lerpSpeed;
 		const scale = Math.sin(time * 10 * randomValue) * 0.1;
@@ -71,6 +77,72 @@ Title: Rusty Spaceship - Orange
 	});
 
 	const component = forwardEventHandlers();
+	// const uniforms = {
+	// 	time: { value: 0.0 },
+	// 	noiseTexture: { value: new TextureLoader().load('./textures/noise.png') },
+	// 	distortionStrength: { value: 0.1 }
+	// };
+	// /Users/thomasranker/code/shader-hmr/src/things/Cactus.js
+	const vertexShader = `
+		uniform float time;
+        varying vec2 vUv;
+        void main() {
+            vUv = uv;
+			float zeroToOne = sin(time)*0.5+0.5;
+			// Calculate a wobble effect based on time and the vertex position
+        float wobbleAmount = sin(position.y * 10.0 + time) * 1.1;
+
+        // Apply the wobble effect to the vertex position
+        vec3 newPosition = position;
+        //newPosition.y += wobbleAmount;
+		// left right
+		//newPosition.x*= 0.5+zeroToOne*0.5;
+		// length
+		//newPosition.y*=0.5+zeroToOne*0.5;
+		// height
+		//newPosition.z*=0.5+zeroToOne;
+
+        // Set the final vertex position
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
+            //gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1. );
+        }
+    `;
+	// simple enough? https://www.shadertoy.com/view/XsVSRd
+	const fragmentShader = /* glsl */ `
+        uniform float time;
+        uniform sampler2D noiseTexture;
+        uniform float distortionStrength;
+        varying vec2 vUv;
+
+		float rand(vec2 n) { return fract(sin(dot(n, vec2(12.9898, 4.1414))) * 43758.5453);}
+		float noise(vec2 n) {
+		const vec2 d = vec2(0.0, 1.0);
+		vec2 b = floor(n), f = smoothstep(vec2(0.0), vec2(1.0), fract(n));
+		return mix(mix(rand(b), rand(b + d.yx), f.x), mix(rand(b + d.xy), rand(b + d.yy), f.x), f.y);
+		}
+
+        void main() {
+            vec2 uv = vUv;
+
+			float textureMoveSpeed = .5;
+            // Sample the noise texture
+            vec2 noiseUv = uv + vec2(time * textureMoveSpeed, time * textureMoveSpeed);
+            vec4 noise = texture2D(noiseTexture, noiseUv);
+
+            // Apply distortion based on noise
+            uv += (noise.xy * 2.0 - 1.0) * distortionStrength;
+
+            // Output the distorted color (example: a simple orange color)
+            vec4 color = vec4(1.0, 0.4, 0.02, noise.r*pow(uv.y,4.0));
+
+            gl_FragColor = color;
+			
+        }
+    `;
+
+	let texture = new TextureLoader().load('./textures/organic4.jpg');
+	texture.wrapS = RepeatWrapping;
+	texture.wrapT = RepeatWrapping;
 </script>
 
 <T is={ref} dispose={false} {...$$restProps} bind:this={$component}>
@@ -181,19 +253,18 @@ Title: Rusty Spaceship - Orange
 			/>
 
 			{#await map then mapValue}
-				<T.Mesh
-					position={[740, -60, -1350 - 10]}
-					rotation.x={Math.PI * 0.5}
-					scale.y={afterBurnerScaleY}
-				>
+				<T.Mesh position={[740, -60, -1350 - 10]} rotation.x={Math.PI * 0.5}>
 					<T.CylinderGeometry args={[70, 0, 1600, 15]} />
-					<T.MeshBasicMaterial
-						color={[1.0, 0.4, 0.02]}
-						alphaMap={mapValue}
-						transparent
-						blending={CustomBlending}
-						blendDst={OneFactor}
-						blendEquation={AddEquation}
+					<T.ShaderMaterial
+						{fragmentShader}
+						{vertexShader}
+						transparent={true}
+						uniforms={{
+							time: { value: 0.0 },
+							noiseTexture: { value: texture },
+							distortionStrength: { value: .1 }
+						}}
+						uniforms.time.value={time}
 					/>
 				</T.Mesh>
 			{/await}
@@ -204,3 +275,16 @@ Title: Rusty Spaceship - Orange
 
 	<slot {ref} />
 </T>
+
+<!--
+
+<T.MeshBasicMaterial
+						color={[1.0, 0.4, 0.02]}
+						alphaMap={mapValue}
+						transparent
+						blending={CustomBlending}
+						blendDst={OneFactor}
+						blendEquation={AddEquation}
+					/>
+
+-->

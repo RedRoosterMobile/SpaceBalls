@@ -6,9 +6,10 @@
 	const { scene } = useThrelte();
 	import { r } from '../helpers';
 
-	let BALLS_COUNT = 10;
+	let BALLS_COUNT = 1;
 	let BALL_SPEED_MULT = 5;
-    // let BALLS_COUNT = 5;
+	let resetOffscreenX = 40;
+	// let BALLS_COUNT = 5;
 	// let BALL_SPEED_MULT = 2.5;
 	let balls = GlobalData.balls;
 	let colors = ['#fcaa67', '#C75D59', '#ffffc7', '#8CC5C6', '#A5898C'];
@@ -26,7 +27,7 @@
 			const ballData = {
 				visible: true,
 				id: 'neb' + i,
-				pos: new Vector3(r(-15, -45), r(-10.5, 1.5), r(30, -45)),
+				pos: new Vector3(r(1, resetOffscreenX), r(-10.5, 1.5), r(30, -45)),
 				color,
 				scale: r(0.5, 1.5),
 				speed: r(0.5, 1.5) * BALL_SPEED_MULT,
@@ -103,19 +104,19 @@
 		let index = 0;
 		balls.forEach((ball) => {
 			ball.pos.x += ball.speed * 10 * delta;
-			if (ball.pos.x > 40) {
+			if (ball.pos.x > resetOffscreenX) {
 				resetBall(ball, index);
 			}
 
 			updateTween(ball, delta);
 
-            // update the instances
-			dummy.position.copy(ball.pos.add((ball.visible ? vecZero : vecOffScreen)));
+			// update the instances
+			dummy.position.copy(ball.pos.add(ball.visible ? vecZero : vecOffScreen));
 			dummy.scale.set(ball.scale, ball.scale, ball.scale);
 			dummy.updateMatrix();
 			instancedMesh.setMatrixAt(index, dummy.matrix);
 			instancedMesh.setColorAt(index, ball.color);
-            index++;
+			index++;
 		});
 		instancedMesh.instanceMatrix.needsUpdate = true;
 	});

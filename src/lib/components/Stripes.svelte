@@ -63,7 +63,7 @@
 		const rotationY = Math.atan2(dx, dz);
 		const rotationX = Math.atan2(dy, distanceXY);
 
-		return [0, 0, 0]; // Assuming no roll needed
+		return [Math.PI / 2, 0, 0]; // Assuming no roll needed
 	}
 </script>
 
