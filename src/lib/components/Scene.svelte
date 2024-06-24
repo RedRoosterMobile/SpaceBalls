@@ -7,6 +7,7 @@
 	import { tweened } from 'svelte/motion';
 	import { quadInOut } from 'svelte/easing';
 
+	// import { ParticlesSystem } from '../ParticlesSystem';
 	import { BirdGeometry } from '../classes/BirdGeometry';
 	import { GPUComputationRenderer } from 'three/addons/misc/GPUComputationRenderer';
 	import { GeneralParticleSystemSimon } from '../classes/GeneralParticleSystemSimon';
@@ -638,7 +639,6 @@
 	material={new MeshBasicMaterial()}
 />
 
-
 <!-- purple confetti -->
 <FallingParticlesInstanced amount={particlesCount} />
 
@@ -674,4 +674,4 @@
 <!-- <Moire/> -->
 <Hearts />
 <!-- <NebulaParticle/> -->
- <!-- <QuarksParticle/> -->
+<!-- <QuarksParticle/> -->
