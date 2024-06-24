@@ -1,36 +1,37 @@
 {
-  "name": "spaceballs",
-  "version": "0.0.1",
-  "private": true,
-  "scripts": {
-    "dev": "vite dev",
-    "build": "vite build",
-    "preview": "vite preview",
-    "lint": "prettier --plugin-search-dir . --check .",
-    "format": "prettier --plugin-search-dir . --write .",
-    "model-pipeline:run": "node scripts/model-pipeline.js"
-  },
-  "devDependencies": {
-    "@sveltejs/adapter-auto": "^3.2.2",
-    "@sveltejs/kit": "^2.5.16",
-    "@threlte/core": "^7.3.0",
-    "@threlte/extras": "^8.11.2",
-    "prettier": "^2.8.0",
-    "prettier-plugin-svelte": "^2.10.1",
-    "svelte": "^4.0.5",
-    "three": "^0.157.0",
-    "three-addons": "^1.2.0",
-    "@sveltejs/vite-plugin-svelte": "^3.1.1",
-    "@threlte/rapier":"^2.0.0",
-    "@dimforge/rapier3d-compat":"^0.13.1",
-    "vite": "^5.0.3",
-    "@sveltejs/adapter-static":"^3.0.2"
-  },
-  "type": "module",
-  "dependencies": {
-    "@threlte/gltf": "^2.0.0",
-    "@types/three-nebula": "^10.0.4",
-    "@babel/runtime": "^7.24.5",
-    "three-nebula": "^10.0.3"
-  }
+	"name": "spaceballs",
+	"version": "0.0.1",
+	"private": true,
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"lint": "prettier --plugin-search-dir . --check .",
+		"format": "prettier --plugin-search-dir . --write .",
+		"model-pipeline:run": "node scripts/model-pipeline.js"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-auto": "^3.2.2",
+		"@sveltejs/kit": "^2.5.16",
+		"@threlte/core": "^7.3.0",
+		"@threlte/extras": "^8.11.2",
+		"prettier": "^2.8.0",
+		"prettier-plugin-svelte": "^2.10.1",
+		"svelte": "^4.0.5",
+		"three": "^0.157.0",
+		"three-addons": "^1.2.0",
+		"@sveltejs/vite-plugin-svelte": "^3.1.1",
+		"@threlte/rapier": "^2.0.0",
+		"@dimforge/rapier3d-compat": "^0.13.1",
+		"vite": "^5.0.3",
+		"@sveltejs/adapter-static": "^3.0.2",
+		"three.quarks": "^0.10.2"
+	},
+	"type": "module",
+	"dependencies": {
+		"@threlte/gltf": "^2.0.0",
+		"@types/three-nebula": "^10.0.4",
+		"@babel/runtime": "^7.24.5",
+		"three-nebula": "^10.0.3"
+	}
 }

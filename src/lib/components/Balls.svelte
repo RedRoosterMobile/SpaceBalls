@@ -6,7 +6,7 @@
 	const { scene } = useThrelte();
 	import { r } from '../helpers';
 
-	let BALLS_COUNT = 1;
+	let BALLS_COUNT = 5;
 	let BALL_SPEED_MULT = 5;
 	let resetOffscreenX = 40;
 	// let BALLS_COUNT = 5;
@@ -108,6 +108,8 @@
 				resetBall(ball, index);
 			}
 
+            // aka: random lane changes
+            // aka: pedestrians gone wild
 			updateTween(ball, delta);
 
 			// update the instances

@@ -4,7 +4,6 @@
 	import { OrbitControls, Float, Sky, Stars, Grid, AnimatedSpriteMaterial } from '@threlte/extras';
 	import Spaceship from './models/spaceship.svelte';
 
-	// use these!!
 	import { tweened } from 'svelte/motion';
 	import { quadInOut } from 'svelte/easing';
 
@@ -269,7 +268,7 @@
 			const aBitBack = laser.position;
 			const laserDirection = new THREE.Vector3(1, 0, 0); // Adjust based on laser direction
 			laserDirection.applyQuaternion(spaceShipRef.quaternion); // Align direction with spaceship orientation
-			checkLaserToBallCollision2(aBitBack, laserDirection);
+			isLaserCollidingWithBall(aBitBack, laserDirection);
 		}
 		// mouse pos
 		if (intersectionPoint) {
@@ -427,7 +426,7 @@
 
 	const raycaster = new Raycaster();
 
-	function checkLaserToBallCollision2(laserStartPosition, laserDirection) {
+	function isLaserCollidingWithBall(laserStartPosition, laserDirection) {
 		// just shoot the laser, keep it going on it's way
 		// on every frame make a new raycast in it's direction to see if there's a hit
 		// have a max lifetime to self desruct laser
@@ -674,3 +673,5 @@
 
 <!-- <Moire/> -->
 <Hearts />
+<!-- <NebulaParticle/> -->
+ <!-- <QuarksParticle/> -->

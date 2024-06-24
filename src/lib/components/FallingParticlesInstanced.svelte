@@ -18,9 +18,9 @@
 	let startX = 0;
 	const rand = Math.random;
 	const planeMat = new MeshPhongMaterial({
-		color: 0xff0080,
+		color: 0x9B59B6,
 		shininess: 0.5,
-		specular: 0xff0080,
+		specular: 0xff0000,
 		emissive: 0x800080,
 		emissiveIntensity: 7.5,
 		side: DoubleSide

@@ -20,8 +20,8 @@ Title: Rusty Spaceship - Orange
 		TextureLoader,
 		RepeatWrapping
 	} from 'three';
-	//import { HeatDistortionMaterial } from '../../materials/HeatDistortionMaterial';
-	import { T, forwardEventHandlers, useFrame, useTask } from '@threlte/core';
+
+	import { T, forwardEventHandlers, useTask } from '@threlte/core';
 	import { useGltf } from '@threlte/extras';
 	import { useTexture } from '@threlte/extras';
 	import { r } from '../../helpers';
@@ -29,8 +29,6 @@ Title: Rusty Spaceship - Orange
 	export const ref = new Group();
 	let afterBurnerScaleY = 1;
 	let time = 0;
-	// 	const tex=new TextureLoader().load('./textures/grid.png');
-	// console.log(tex);
 
 	const gltf = useGltf('./models/spaceship.glb');
 	const map = useTexture('textures/energy-beam-opacity.png');
@@ -53,10 +51,6 @@ Title: Rusty Spaceship - Orange
 		return gltf.materials.spaceship_racer;
 	};
 
-	//<T.CylinderGeometry args={[70, 0, 1600, 15]} />
-	//const cylinderGeo = new CylinderGeometry(70, 0, 1600, 15);
-	//window.cg = cylinderGeo;
-
 	let randomValue = 1;
 	let targetRandomValue = 1;
 	const timeBetweenRandomValuesS = 1; // seconds
@@ -69,44 +63,43 @@ Title: Rusty Spaceship - Orange
 			targetRandomValue = r(1, 1.5);
 			timeToNextRandomValue = timeBetweenRandomValuesS;
 		}
-		//uniforms.time.value = time;
 		// Interpolate towards the target value
 		randomValue += (targetRandomValue - randomValue) * lerpSpeed;
-		const scale = Math.sin(time * 10 * randomValue) * 0.1;
+		const scale = Math.sin(time * 10 * randomValue) * 0.025;
 		afterBurnerScaleY = 1 + scale;
 	});
 
 	const component = forwardEventHandlers();
-	// const uniforms = {
-	// 	time: { value: 0.0 },
-	// 	noiseTexture: { value: new TextureLoader().load('./textures/noise.png') },
-	// 	distortionStrength: { value: 0.1 }
-	// };
-	// /Users/thomasranker/code/shader-hmr/src/things/Cactus.js
 	const vertexShader = `
-		uniform float time;
-        varying vec2 vUv;
-        void main() {
-            vUv = uv;
-			float zeroToOne = sin(time)*0.5+0.5;
-			// Calculate a wobble effect based on time and the vertex position
-        float wobbleAmount = sin(position.y * 10.0 + time) * 1.1;
+    #include <common>
+    uniform float time;
+    varying vec2 vUv;
+	uniform sampler2D noiseTexture;
 
-        // Apply the wobble effect to the vertex position
-        vec3 newPosition = position;
-        //newPosition.y += wobbleAmount;
-		// left right
-		//newPosition.x*= 0.5+zeroToOne*0.5;
-		// length
-		//newPosition.y*=0.5+zeroToOne*0.5;
-		// height
-		//newPosition.z*=0.5+zeroToOne;
+    float angleMultiplier = 0.00025; // Adjust this value to control the bend
+    void main() {
+        vUv = uv;
+        vec3 transformed = position;
+
+		//x: +left -right
+		vec2 noiseUv = uv + vec2(time * 200., 0.);
+		float noise = texture2D(noiseTexture, noiseUv).r - 0.5;
+		float windIntensity = 150.;
+		// simple sine for testing
+		// float windOffsetX = sin(time * 20.) * 50.;
+		float windOffsetX = sin(time * 20.) * noise * windIntensity;
+		transformed.x += windOffsetX * (1. - uv.y);
 
         // Set the final vertex position
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0);
-            //gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1. );
-        }
-    `;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(transformed, 1.0);
+    }
+`;
+	const fragmentShader_ = `
+    varying vec2 vUv;
+    void main() {
+        gl_FragColor = vec4(vUv, 1.0, 1.0); // Simple fragment shader for visualization
+    }
+`;
 	// simple enough? https://www.shadertoy.com/view/XsVSRd
 	const fragmentShader = /* glsl */ `
         uniform float time;
@@ -114,29 +107,24 @@ Title: Rusty Spaceship - Orange
         uniform float distortionStrength;
         varying vec2 vUv;
 
-		float rand(vec2 n) { return fract(sin(dot(n, vec2(12.9898, 4.1414))) * 43758.5453);}
-		float noise(vec2 n) {
-		const vec2 d = vec2(0.0, 1.0);
-		vec2 b = floor(n), f = smoothstep(vec2(0.0), vec2(1.0), fract(n));
-		return mix(mix(rand(b), rand(b + d.yx), f.x), mix(rand(b + d.xy), rand(b + d.yy), f.x), f.y);
-		}
-
         void main() {
             vec2 uv = vUv;
 
-			float textureMoveSpeed = .5;
+			      float textureMoveSpeed = 1.5; // 0.5
             // Sample the noise texture
-            vec2 noiseUv = uv + vec2(time * textureMoveSpeed, time * textureMoveSpeed);
+            vec2 noiseUv = uv + vec2(sin(time) * textureMoveSpeed, time * textureMoveSpeed);
             vec4 noise = texture2D(noiseTexture, noiseUv);
 
             // Apply distortion based on noise
             uv += (noise.xy * 2.0 - 1.0) * distortionStrength;
 
             // Output the distorted color (example: a simple orange color)
-            vec4 color = vec4(1.0, 0.4, 0.02, noise.r*pow(uv.y,4.0));
+            vec4 color = vec4(1.0, 0.4, 0.02, noise.g * pow(uv.y,12.0));
+            // bloom
+			      color.xyz *= 10.3;
 
             gl_FragColor = color;
-			
+			//gl_FragColor = vec4(vUv, 1.0, 1.0); // Simple fragment shader for visualization
         }
     `;
 
@@ -253,8 +241,12 @@ Title: Rusty Spaceship - Orange
 			/>
 
 			{#await map then mapValue}
-				<T.Mesh position={[740, -60, -1350 - 10]} rotation.x={Math.PI * 0.5}>
-					<T.CylinderGeometry args={[70, 0, 1600, 15]} />
+				<T.Mesh
+					position={[740, -60, -1350 - 10]}
+					rotation.x={Math.PI * 0.5}
+					scale={afterBurnerScaleY}
+				>
+					<T.CylinderGeometry args={[70, 0, 1600, 150]} />
 					<T.ShaderMaterial
 						{fragmentShader}
 						{vertexShader}
@@ -262,7 +254,7 @@ Title: Rusty Spaceship - Orange
 						uniforms={{
 							time: { value: 0.0 },
 							noiseTexture: { value: texture },
-							distortionStrength: { value: .1 }
+							distortionStrength: { value: 0.5 }
 						}}
 						uniforms.time.value={time}
 					/>
@@ -277,7 +269,8 @@ Title: Rusty Spaceship - Orange
 </T>
 
 <!--
-
+https://sbcode.net/threejs/bender/
+https://github.com/Sean-Bradley/Bender
 <T.MeshBasicMaterial
 						color={[1.0, 0.4, 0.02]}
 						alphaMap={mapValue}
@@ -286,5 +279,5 @@ Title: Rusty Spaceship - Orange
 						blendDst={OneFactor}
 						blendEquation={AddEquation}
 					/>
-
+https://github.com/wholcman/bend-modifier-3d
 -->

@@ -5,6 +5,16 @@
 	import { r } from '../helpers';
 
 	let STARS_COUNT = 350;
+	/*
+Your updated list of colors is:
+
+#fcaa67 (Light Orange)
+#C75D59 (Coral Red)
+#ffffc7 (Pale Yellow)
+#8CC5C6 (Teal)
+#A5898C (Mauve)
+#9B59B6 (Amethyst Purple)
+	*/
 	let colors = ['#fcaa67', '#C75D59', '#ffffc7', '#8CC5C6', '#A5898C'];
 	let stars = [];
 
@@ -16,10 +26,12 @@
 
 	function resetStar(star) {
 		if (r(0, 1) > 0.8) {
-			star.pos = new Vector3(r(-10, -30), r(-5, 5), r(6, -6));
+			//star.pos = new Vector3(r(-10, -30), r(-5, 5), r(6, -6));
+			star.pos = new Vector3(r(-10, -30), r(-5, 0), r(6, -6));
 			star.len = r(1.5, 15);
 		} else {
-			star.pos = new Vector3(r(-15, -45 - 150), r(-10.5, 1.5), r(30, -45));
+			//star.pos = new Vector3(r(-15, -45 - 150), r(-10.5, 1.5), r(30, -45));
+			star.pos = new Vector3(r(-15, -45 - 150), r(-10.5, 0), r(30, -45));
 			star.len = r(2.5, 20);
 		}
 
